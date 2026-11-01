@@ -65,6 +65,12 @@ export interface ElementFinding {
    * échec signalé avec confiance faible doit être affiché comme « à vérifier ».
    */
   confidence?: number;
+  /**
+   * Identifiant du frame dans lequel l'élément a été trouvé (surlignage,
+   * fonctionnalité highlight). `0` = frame principal ; absent = inconnu
+   * (rapports produits par une version antérieure — traité comme principal).
+   */
+  frameId?: number;
 }
 
 /** Un problème détecté par une règle : ce que consomme directement l'UI. */
@@ -102,6 +108,13 @@ export interface AuditIssue {
    * antérieures (rétrocompatible).
    */
   overlapsOtherRule?: boolean;
+  /**
+   * true si au moins un finding de cette issue porte un sélecteur exploitable
+   * pour le surlignage dans la page (fonctionnalité highlight). Absent des
+   * rapports persistés par les versions antérieures (rétrocompatible) : l'UI
+   * calcule alors le drapeau à la volée.
+   */
+  highlightable?: boolean;
   /** Éléments concernés (peut être vide pour une absence globale, ex: <html lang>). */
   elements: ElementFinding[];
 }

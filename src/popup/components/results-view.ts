@@ -16,6 +16,21 @@ import { el, text, formatDateTimeFr, formatDuration } from '../../utils/ui';
 
 const SEVERITIES: Severity[] = ['critical', 'major', 'moderate', 'minor'];
 
+/** Callbacks d'interaction fournis par la popup (fonctionnalité highlight). */
+export interface ResultsActions {
+  /** Surligne les éléments de l'issue dans la page active. */
+  onHighlight?: (issue: AuditIssue) => void;
+}
+
+/** Vrai si l'issue peut être surlignée (au moins un finding avec sélecteur).
+ * Rétrocompatible : utilise le drapeau du rapport s'il existe, sinon calcule. */
+export function isHighlightable(issue: AuditIssue): boolean {
+  if (typeof issue.highlightable === 'boolean') return issue.highlightable;
+  return issue.elements.some(
+    (finding) => typeof finding.selector === 'string' && finding.selector !== '',
+  );
+}
+
 /** Carte de score : chiffre + niveau + métadonnées techniques discrètes. */
 export function renderScoreCard(report: A11yReport): HTMLElement {
   const card = el('section', { class: `score score--${report.score.level}` }, [
@@ -192,8 +207,8 @@ async function copyIssueDetails(issue: AuditIssue): Promise<void> {
   const lines = [
     `[${SEVERITY_LABELS_FR[issue.severity]}] ${issue.title} (${issue.ruleId})`,
     issue.description,
-    ...issue.elements.map(
-      (element) => `  • ${element.selector ?? element.tag ?? 'élément'} ${element.snippet ?? ''}`.trimEnd(),
+    ...issue.elements.map((element) =>
+      `  • ${element.selector ?? element.tag ?? 'élément'} ${element.snippet ?? ''}`.trimEnd(),
     ),
     `Recommandation : ${issue.recommendation}`,
     issue.wcag ? `Référence : ${issue.wcag}` : '',
@@ -209,8 +224,7 @@ async function copyIssueDetails(issue: AuditIssue): Promise<void> {
 /** URL de documentation d'une issue (Étape 16) : helpUrl sinon critère WCAG W3C. */
 export function documentationUrl(issue: AuditIssue): string | null {
   if (issue.helpUrl) return issue.helpUrl;
-  const match = /WCAG\s+(\d+(?:\.\d+)?)/i.exec(issue.wcag ?? '');
-  const criterion = match?.[1];
+  const criterion = wcagCriterion(issue.wcag);
   if (!criterion) return null;
   return `https://www.w3.org/WAI/WCAG22/Understanding/${wcagSlug(criterion)}/`;
 }
@@ -231,6 +245,16 @@ const WCAG_SLUGS: Record<string, string> = {
 
 function wcagSlug(criterion: string): string {
   return WCAG_SLUGS[criterion] ?? `criteria-${criterion.replace(/\./g, '-')}`;
+}
+
+/**
+ * Extrait le numéro complet d'un critère WCAG (« WCAG 1.1.1 (A) » → « 1.1.1 »).
+ * L'ancre de niveau ((A)/AA/AAA) est écartée pour ne pas être confondue avec
+ * une version du référentiel.
+ */
+function wcagCriterion(wcag: string | undefined): string | null {
+  const match = /WCAG\s+(\d+\.\d+\.\d+)/i.exec(wcag ?? '');
+  return match?.[1] ?? null;
 }
 
 /** Assemblage complet de la vue « résultats ». */
@@ -276,13 +300,13 @@ async function importExport(
   report: A11yReport,
 ): Promise<void> {
   if (format === 'json') {
-    const { exportReportJson } = await import('../services/export-json');
+    const { exportReportJson } = await import('../../services/export-json');
     exportReportJson(report);
   } else if (format === 'csv') {
-    const { exportReportCsv } = await import('../services/export-csv');
+    const { exportReportCsv } = await import('../../services/export-csv');
     exportReportCsv(report);
   } else {
-    const { copyReportMarkdown } = await import('../services/export-markdown');
+    const { copyReportMarkdown } = await import('../../services/export-markdown');
     await copyReportMarkdown(report);
   }
 }

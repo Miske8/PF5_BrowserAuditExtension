@@ -135,6 +135,16 @@ body {
   background: var(--color-surface);
 }
 
+/* Badge d'action (Étape 16) : rappelle qu'il reste des problèmes critiques
+   ou majeurs. L'information est aussi portée par le title du bouton, jamais
+   par la seule couleur. */
+.btn--alert {
+  box-shadow: inset 0 0 0 2px var(--sev-critical);
+}
+.btn--alert:disabled {
+  box-shadow: none;
+}
+
 .btn:focus-visible,
 summary:focus-visible,
 a:focus-visible {
@@ -209,18 +219,57 @@ a:focus-visible {
 .score {
   display: flex;
   align-items: baseline;
-  gap: var(--space-2);
+  gap: var(--space-3);
 }
 .score__value {
   margin: 0;
   font-size: 34px;
   font-weight: 800;
+  line-height: 1.1;
+}
+.score__meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
 }
 .score__label {
   margin: 0;
   color: var(--color-text-muted);
   font-size: 12px;
 }
+
+/* Barre de pénalité (Étape 16) : purely décorative (aria-hidden côté rendu),
+   les compteurs textuels du résumé restent la source d'information. */
+.penalty-bar {
+  display: flex;
+  height: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+.penalty-bar__seg {
+  min-width: 6px;
+}
+.penalty-bar__seg--critical {
+  background: var(--sev-critical);
+}
+.penalty-bar__seg--major {
+  background: var(--sev-major);
+}
+.penalty-bar__seg--moderate {
+  background: #b8a400; /* lisible aussi bien sur fond clair que sombre */
+}
+.penalty-bar__seg--minor {
+  background: var(--sev-minor);
+}
+.penalty-bar__seg--clean {
+  flex: 1;
+  background: var(--sev-minor);
+  opacity: 0.55;
+}
+
 .score--excellent .score__value {
   color: var(--sev-minor);
 }
@@ -299,8 +348,22 @@ a:focus-visible {
 .issue {
   background: var(--color-bg);
   border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-border);
   border-radius: var(--radius);
   overflow: hidden;
+}
+/* Accent de sévérité sur la carte entière (hiérarchie visuelle, Étape 16). */
+.issue--critical {
+  border-left-color: var(--sev-critical);
+}
+.issue--major {
+  border-left-color: var(--sev-major);
+}
+.issue--moderate {
+  border-left-color: #b8a400;
+}
+.issue--minor {
+  border-left-color: var(--sev-minor);
 }
 .issue__header {
   display: flex;
@@ -323,6 +386,19 @@ a:focus-visible {
   white-space: nowrap;
 }
 
+/* Chevron décoratif : indique l'état ouvert/fermé par rotation CSS.
+   Purement visuel (aria-hidden côté rendu) — le <summary> natif conveye
+   déjà l'état étendu/réduit aux technologies d'assistance. */
+.issue__chevron {
+  font-size: 12px;
+  line-height: 1;
+  color: var(--color-text-muted);
+  transition: transform 0.15s ease;
+}
+.issue[open] .issue__chevron {
+  transform: rotate(180deg);
+}
+
 .badge {
   font-size: 11px;
   font-weight: 700;
@@ -330,6 +406,7 @@ a:focus-visible {
   border-radius: 999px;
   color: #fff;
   white-space: nowrap;
+  letter-spacing: 0.02em;
 }
 .badge--critical {
   background: var(--sev-critical);
@@ -403,6 +480,26 @@ a:focus-visible {
   margin: var(--space-2) 0;
   color: var(--sev-minor);
   font-weight: 600;
+}
+
+/* Note de recoupement (Étape 16) : un même élément signalé par deux règles. */
+.issue__overlap {
+  margin: 0;
+  padding: var(--space-1) var(--space-2);
+  border-left: 3px solid var(--color-primary);
+  background: var(--color-surface);
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+/* --- Actions d'export --------------------------------------------------------- */
+.exports {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
 }
 
 /* --- Pied de page ------------------------------------------------------------- */

@@ -72,6 +72,29 @@ export function isDocumentAnalyzable(doc: Document | null | undefined): doc is D
   return doc != null && doc.documentElement != null;
 }
 
+/** Identifiant du frame courant pour les findings (surlignage multi-frames). */
+function detectFrameId(): number {
+  try {
+    return window === window.top ? 0 : -1;
+  } catch {
+    return -1;
+  }
+}
+
+/**
+ * Enrichit une issue des métadonnées de localisation pour l'UI et le
+ * surlignage : drapeau `highlightable` + `frameId` par finding.
+ * Les rapports produits avant cette fonctionnalité n'ont ni l'un ni l'autre ;
+ * l'UI retombe alors sur « calcul à la volée » / frame principal.
+ */
+export function decorateIssueForHighlight(issue: AuditIssue, frameId: number): AuditIssue {
+  const elements = issue.elements.map((finding) =>
+    finding.selector ? { ...finding, frameId } : finding,
+  );
+  const highlightable = elements.some((finding) => typeof finding.selector === 'string');
+  return { ...issue, elements, highlightable };
+}
+
 /**
  * Exécute toutes les règles actives sur `doc`.
  * Ne lève pas : si le document est inexploitable, retourne une sortie vide
@@ -86,6 +109,7 @@ export function runAudit(
   const startedAt = performance.now();
   const resolved = resolveOptions(options);
   const disabled = new Set(resolved.disabledRules.map(String));
+  const frameId = detectFrameId();
 
   const issues: AuditIssue[] = [];
   const traces: RuleRunTrace[] = [];
@@ -111,7 +135,7 @@ export function runAudit(
     }
     const outcome = runRule(rule, ctx);
     traces.push(outcome.trace);
-    issues.push(...outcome.issues);
+    issues.push(...outcome.issues.map((issue) => decorateIssueForHighlight(issue, frameId)));
     if (outcome.error) errors.push(outcome.error);
   }
 
