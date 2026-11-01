@@ -25,6 +25,7 @@ import { tabindexPositiveRule } from '../src/audit/rules/tabindex-positive';
 import { ariaHiddenFocusableRule } from '../src/audit/rules/aria-hidden-focusable';
 import { duplicateIdRule } from '../src/audit/rules/duplicate-id';
 import { landmarksRule } from '../src/audit/rules/landmarks';
+import { colorContrastRule } from '../src/audit/rules/color-contrast';
 
 const URL = 'https://example.com/test';
 
@@ -42,6 +43,14 @@ function evaluate(rule: AuditRule, html: string) {
   return { output, issues: output.issues };
 }
 
+/**
+ * Évaluateur « sans styles » pour le moteur complet : la règle de contraste a
+ * besoin d'un getComputedStyle crédible (testé séparément dans
+ * rules-contrast.test.ts). Sans defaultView injectée, on neutralise ici les
+ * candidats texte pour que CLEAN_PAGE reste un test de non-régression pur.
+ */
+const NO_CONTRAST_RULES = getRules().filter((r) => r.id !== 'color-contrast');
+
 const CLEAN_PAGE = `<html lang="fr"><head><title>Page propre</title></head>
 <body>
 <header><nav aria-label="Principal"><a href="/">Accueil</a></nav></header>
@@ -51,8 +60,8 @@ const CLEAN_PAGE = `<html lang="fr"><head><title>Page propre</title></head>
 <footer>À propos</footer>
 </body></html>`;
 
-describe('registre — intégrité des 12 règles MVP', () => {
-  it('le registre contient exactement les 12 règles de l’Étape 6', () => {
+describe('registre — intégrité des 13 règles MVP', () => {
+  it('le registre contient exactement les 13 règles des Étapes 6-7', () => {
     expect(getRules().map((r) => r.id)).toEqual([
       'image-alt',
       'button-name',
@@ -66,7 +75,15 @@ describe('registre — intégrité des 12 règles MVP', () => {
       'aria-hidden-focusable',
       'duplicate-id',
       'landmarks',
+      'color-contrast',
     ]);
+  });
+
+  it('la règle de contraste est bien déclarée dans le registre (Étape 7)', () => {
+    const contrast = getRules().find((r) => r.id === 'color-contrast');
+    expect(contrast).toBeDefined();
+    expect(contrast!.category).toBe('color');
+    expect(contrast!.id).toBe(colorContrastRule.id);
   });
 
   it('toutes les règles ont un contrat complet et unique', () => {
@@ -82,10 +99,19 @@ describe('registre — intégrité des 12 règles MVP', () => {
     }
   });
 
-  it('une page exemplaire ne déclenche AUCUNE des 12 règles (zéro faux positif)', () => {
-    const output = runAudit(ctx(CLEAN_PAGE).document, URL);
+  it('une page exemplaire ne déclenche AUCUNE des 12 règles de base (zéro faux positif)', () => {
+    // Sans defaultView injectée, la règle de contraste n'a pas de styles
+    // exploitables : on teste les 12 règles structurelles avec le moteur.
+    const output = runAudit(ctx(CLEAN_PAGE).document, URL, {}, NO_CONTRAST_RULES);
     expect(output.issues).toEqual([]);
     expect(output.traces.every((t) => t.status === 'pass')).toBe(true);
+  });
+
+  it('sans defaultView, la règle de contraste ne plante jamais et ne signale rien', () => {
+    const output = runAudit(ctx(CLEAN_PAGE).document, URL, {}, [colorContrastRule]);
+    expect(output.errors).toEqual([]);
+    expect(output.issues).toEqual([]);
+    expect(output.traces[0]!.status).toBe('pass');
   });
 });
 
