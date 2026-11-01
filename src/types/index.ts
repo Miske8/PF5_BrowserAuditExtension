@@ -109,6 +109,12 @@ export interface AuditIssue {
    */
   overlapsOtherRule?: boolean;
   /**
+   * Ids des autres règles qui signalent le même élément (intégration
+   * axe-core, mode « merge »). Pair avec `overlapsOtherRule` ; absent des
+   * rapports produits sans axe-core (rétrocompatible).
+   */
+  relatedRuleIds?: string[];
+  /**
    * true si au moins un finding de cette issue porte un sélecteur exploitable
    * pour le surlignage dans la page (fonctionnalité highlight). Absent des
    * rapports persistés par les versions antérieures (rétrocompatible) : l'UI
@@ -151,6 +157,28 @@ export interface AuditOptions {
    * Mode développeur : 0 (on affiche aussi les estimations douteuses).
    */
   minContrastConfidence?: number;
+  /**
+   * Intégration optionnelle axe-core (moteur complémentaire).
+   * Absente = axe non activé (comportement historique, bundle allégé).
+   */
+  axeCore?: AxeCoreOptions;
+}
+
+/** Réglages de la règle complémentaire axe-core (voir audit/rules/axe-adapter.ts). */
+export interface AxeCoreOptions {
+  /** true pour exécuter le run axe en plus des règles maison. */
+  enabled: boolean;
+  /**
+   * Stratégie de fusion avec les issues maison :
+   * - 'complement' (défaut) : drop les violations axe doublonnant une issue
+   *   maison sur le même élément ;
+   * - 'merge' : conserve les deux et les relie via `relatedRuleIds`.
+   */
+  overlapMode?: 'complement' | 'merge';
+  /** Timeout global du run axe en ms (défaut : 8000). */
+  timeoutMs?: number;
+  /** Sélecteur CSS restreignant l'analyse axe (ex: '#main'). */
+  include?: string;
 }
 
 export const DEFAULT_AUDIT_OPTIONS: AuditOptions = {
