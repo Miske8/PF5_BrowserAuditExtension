@@ -12,6 +12,11 @@
  */
 
 import { loadLastReport, runAuditOnActiveTab } from '../services/executor';
+import {
+  loadPreferences,
+  minContrastConfidence,
+  preferencesToAuditOptions,
+} from '../services/preferences';
 import type { AuditRunResult } from '../audit/types';
 import type { A11yReport } from '../audit/report-builder';
 import { emptyState, errorState, loadingState } from './components/state-views';
@@ -135,7 +140,13 @@ export function initPopup(root: ParentNode = document): {
   async function run(): Promise<void> {
     if (current.kind === 'loading') return; // anti double-clic
     setState({ kind: 'loading' });
-    const result = await runAuditOnActiveTab();
+    // Les préférences (Étape 13) pilotent le moteur : règles désactivées,
+    // niveau de contraste, seuil de confiance du mode développeur.
+    const prefs = await loadPreferences();
+    const result = await runAuditOnActiveTab({
+      ...preferencesToAuditOptions(prefs),
+      minContrastConfidence: minContrastConfidence(prefs.sensitivity),
+    });
     setState(toUiState(result));
   }
 
