@@ -100,7 +100,10 @@ export function parseHex(value: string): Rgba | null {
 export function parseRgbFunction(value: string): Rgba | null {
   const match = /^rgba?\(([^)]*)\)$/i.exec(value.trim());
   if (!match) return null;
-  const parts = match[1]!.trim().split(/[\s,/]+/).filter((p) => p !== '');
+  const parts = match[1]!
+    .trim()
+    .split(/[\s,/]+/)
+    .filter((p) => p !== '');
   if (parts.length < 3 || parts.length > 4) return null;
   const channel = (token: string): number | null => {
     if (token.endsWith('%')) {
@@ -117,9 +120,7 @@ export function parseRgbFunction(value: string): Rgba | null {
   let a = 1;
   if (parts.length === 4) {
     const token = parts[3]!;
-    a = token.endsWith('%')
-      ? Number.parseFloat(token) / 100
-      : Number.parseFloat(token);
+    a = token.endsWith('%') ? Number.parseFloat(token) / 100 : Number.parseFloat(token);
     if (!Number.isFinite(a)) return null;
     a = clamp(a, 0, 1);
   }
@@ -178,7 +179,12 @@ export function blendOver(foreground: Rgba, background: Rgb): Rgb {
   }
   const mix = (fg: number, bg: number): number =>
     Math.round(fg * foreground.a + bg * (1 - foreground.a));
-  return { r: mix(foreground.r, background.r), g: mix(foreground.g, background.g), b: mix(foreground.b, background.b), a: 1 };
+  return {
+    r: mix(foreground.r, background.r),
+    g: mix(foreground.g, background.g),
+    b: mix(foreground.b, background.b),
+    a: 1,
+  };
 }
 
 /** Confort : aplatir sur blanc (cas par défaut des pages web). */
@@ -188,7 +194,8 @@ export function compositeOverWhite(color: Rgba): Rgb {
 
 /** Conversion #rrggbb (utile pour les messages/tests). */
 export function toHex(color: Rgb): string {
-  const h = (n: number): string => clamp(Math.round(n), 0, 255).toString(16).padStart(2, '0');
+  const h = (n: number): string =>
+    clamp(Math.round(n), 0, 255).toString(16).padStart(2, '0');
   return `#${h(color.r)}${h(color.g)}${h(color.b)}`;
 }
 

@@ -27,9 +27,9 @@ export const headingOrderRule = defineRule({
     'Utiliser les niveaux dans l’ordre (h1 → h2 → h3…), sans en sauter. Changer le style visuel via CSS, pas via le niveau de titre.',
   version: '1.0.0',
   evaluate: (ctx) => {
-    const headings = Array.from(ctx.document.querySelectorAll('h1, h2, h3, h4, h5, h6')).filter(
-      (h) => h.closest('[aria-hidden="true"]') === null,
-    );
+    const headings = Array.from(
+      ctx.document.querySelectorAll('h1, h2, h3, h4, h5, h6'),
+    ).filter((h) => h.closest('[aria-hidden="true"]') === null);
 
     if (headings.length === 0) {
       return {
@@ -37,9 +37,11 @@ export const headingOrderRule = defineRule({
         issues: [
           {
             title: 'Aucun titre de section',
-            description: 'Le document ne contient aucun élément h1…h6 : structure non navigable par titres.',
+            description:
+              'Le document ne contient aucun élément h1…h6 : structure non navigable par titres.',
             severity: 'moderate',
-            recommendation: 'Introduire au moins un <h1> décrivant le sujet principal, puis une hiérarchie cohérente.',
+            recommendation:
+              'Introduire au moins un <h1> décrivant le sujet principal, puis une hiérarchie cohérente.',
             elements: [],
             // Absence globale = 1 seule occurrence (sinon elements.length = 0).
             occurrences: 1,
@@ -55,7 +57,10 @@ export const headingOrderRule = defineRule({
     for (const h of headings) {
       const level = Number.parseInt(h.tagName.slice(1), 10);
       if (previousLevel > 0 && level > previousLevel + 1) {
-        skips.push({ el: h, detail: `h${level} suit directement h${previousLevel} (saut de ${level - previousLevel})` });
+        skips.push({
+          el: h,
+          detail: `h${level} suit directement h${previousLevel} (saut de ${level - previousLevel})`,
+        });
       }
       previousLevel = level;
     }
@@ -68,9 +73,11 @@ export const headingOrderRule = defineRule({
     if (h1s.length > 1) {
       issues.push({
         title: 'Plusieurs titres <h1>',
-        description: 'La page déclare plusieurs h1 : la structure principale est ambiguë.',
+        description:
+          'La page déclare plusieurs h1 : la structure principale est ambiguë.',
         severity: 'moderate',
-        recommendation: 'Garder un seul <h1> (sujet de la page) et rétrograder les autres en <h2>.',
+        recommendation:
+          'Garder un seul <h1> (sujet de la page) et rétrograder les autres en <h2>.',
         elements: h1s.map((el) => finding(el, 'titre h1')),
       });
     }

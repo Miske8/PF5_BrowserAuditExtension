@@ -45,16 +45,24 @@ function ctxWithStyles(
     getComputedStyle(el: Element): CSSStyleDeclaration {
       let spec: StyleSpec = { ...defaults };
       for (const [selector, value] of Object.entries(stylesBySelector)) {
-        if (el.matches(selector)) spec = { ...spec, ...value };
+        if (el!.matches(selector)) spec = { ...spec, ...value };
       }
       return spec as unknown as CSSStyleDeclaration;
     },
   };
   Object.defineProperty(doc, 'defaultView', { value: view, configurable: true });
-  return { document: doc, url: 'https://example.com/contrast', options: { ...DEFAULT_AUDIT_OPTIONS, ...options } };
+  return {
+    document: doc,
+    url: 'https://example.com/contrast',
+    options: { ...DEFAULT_AUDIT_OPTIONS, ...options },
+  };
 }
 
-function evaluate(html: string, styles: Record<string, StyleSpec>, options: Partial<AuditOptions> = {}) {
+function evaluate(
+  html: string,
+  styles: Record<string, StyleSpec>,
+  options: Partial<AuditOptions> = {},
+) {
   const result = colorContrastRule.evaluate(ctxWithStyles(html, styles, options));
   return result.issues.map((raw, index) => normalizeIssue(colorContrastRule, raw, index));
 }
@@ -63,7 +71,10 @@ const PAGE = '<body><p class="t">Texte testé</p></body>';
 
 describe('color-contrast : cas conformes (pas de faux positifs)', () => {
   it('noir sur blanc → passe', () => {
-    const issues = evaluate(PAGE, { '.t': { color: 'rgb(0, 0, 0)' }, body: { backgroundColor: 'rgb(255, 255, 255)' } });
+    const issues = evaluate(PAGE, {
+      '.t': { color: 'rgb(0, 0, 0)' },
+      body: { backgroundColor: 'rgb(255, 255, 255)' },
+    });
     expect(issues).toHaveLength(0);
   });
 
@@ -95,19 +106,31 @@ describe('color-contrast : cas conformes (pas de faux positifs)', () => {
 
   it('aria-hidden ignoré (hors arbre d’accessibilité)', () => {
     const html = '<body><p aria-hidden="true" class="t">Déco</p></body>';
-    const issues = evaluate(html, { '.t': { color: '#ffcccc' }, body: { backgroundColor: '#ffffff' } });
+    const issues = evaluate(html, {
+      '.t': { color: '#ffcccc' },
+      body: { backgroundColor: '#ffffff' },
+    });
     expect(issues).toHaveLength(0);
   });
 
   it('display:none et opacity:0 ignorés', () => {
-    const hidden = evaluate(PAGE, { '.t': { color: '#fff', display: 'none' }, body: { backgroundColor: '#fff' } });
+    const hidden = evaluate(PAGE, {
+      '.t': { color: '#fff', display: 'none' },
+      body: { backgroundColor: '#fff' },
+    });
     expect(hidden).toHaveLength(0);
-    const faded = evaluate(PAGE, { '.t': { color: '#fff', opacity: '0' }, body: { backgroundColor: '#fff' } });
+    const faded = evaluate(PAGE, {
+      '.t': { color: '#fff', opacity: '0' },
+      body: { backgroundColor: '#fff' },
+    });
     expect(faded).toHaveLength(0);
   });
 
   it('couleur non résoluble (hsl…) → on renonce, pas de faux positif', () => {
-    const issues = evaluate(PAGE, { '.t': { color: 'hsl(0, 0%, 0%)' }, body: { backgroundColor: '#fff' } });
+    const issues = evaluate(PAGE, {
+      '.t': { color: 'hsl(0, 0%, 0%)' },
+      body: { backgroundColor: '#fff' },
+    });
     expect(issues).toHaveLength(0);
   });
 
@@ -139,15 +162,15 @@ describe('color-contrast : détections', () => {
       body: { backgroundColor: '#ffffff' },
     });
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe('critical');
-    expect(issues[0].ruleId).toBe('color-contrast');
-    expect(issues[0].category).toBe('color');
-    const el = issues[0].elements[0];
-    expect(el.detail).toMatch(/contraste \d+(\.\d+)?:1 < 4\.5:1/);
-    expect(el.detail).toContain('#eeeeee');
-    expect(el.confidence).toBe(1); // fond opaque résolu
-    expect(el.selector).toBeTruthy();
-    expect(el.snippet).toContain('Texte testé');
+    expect(issues[0]!.severity).toBe('critical');
+    expect(issues[0]!.ruleId).toBe('color-contrast');
+    expect(issues[0]!.category).toBe('color');
+    const el = issues[0]!.elements[0];
+    expect(el!.detail).toMatch(/contraste \d+(\.\d+)?:1 < 4\.5:1/);
+    expect(el!.detail).toContain('#eeeeee');
+    expect(el!.confidence).toBe(1); // fond opaque résolu
+    expect(el!.selector).toBeTruthy();
+    expect(el!.snippet).toContain('Texte testé');
   });
 
   it('rouge #ff0000 sur blanc (≈3.99:1) → moderate (AA texte normal)', () => {
@@ -156,8 +179,8 @@ describe('color-contrast : détections', () => {
       body: { backgroundColor: '#ffffff' },
     });
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe('moderate');
-    expect(issues[0].wcag).toBe('WCAG 1.4.3 (AA)');
+    expect(issues[0]!.severity).toBe('moderate');
+    expect(issues[0]!.wcag).toBe('WCAG 1.4.3 (AA)');
   });
 
   it('gros texte gras 20px à 2.2:1 → major', () => {
@@ -166,8 +189,8 @@ describe('color-contrast : détections', () => {
       body: { backgroundColor: '#ffffff' },
     });
     expect(issues).toHaveLength(1);
-    expect(issues[0].severity).toBe('major');
-    expect(issues[0].elements[0].detail).toContain('gros texte');
+    expect(issues[0]!.severity).toBe('major');
+    expect(issues[0]!.elements[0].detail).toContain('gros texte');
   });
 
   it('fond porté par un ancêtre opaque (chaîne de parents)', () => {
@@ -177,8 +200,8 @@ describe('color-contrast : détections', () => {
       '.dark': { backgroundColor: '#222222' },
     });
     expect(issues).toHaveLength(1);
-    expect(issues[0].elements[0].detail).toContain('sur fond #222222');
-    expect(issues[0].elements[0].confidence).toBe(1);
+    expect(issues[0]!.elements[0].detail).toContain('sur fond #222222');
+    expect(issues[0]!.elements[0].confidence).toBe(1);
   });
 
   it('transparence composée : rgba empilé puis blanc supposé → confiance réduite', () => {
@@ -195,9 +218,9 @@ describe('color-contrast : détections', () => {
   it('sans ancêtre opaque : blanc supposé + mention « à vérifier »', () => {
     const issues = evaluate(PAGE, { '.t': { color: '#dddddd' } });
     expect(issues).toHaveLength(1);
-    const el = issues[0].elements[0];
-    expect(el.confidence).toBeLessThanOrEqual(0.6);
-    expect(el.detail).toContain('à vérifier manuellement');
+    const el = issues[0]!.elements[0];
+    expect(el!.confidence).toBeLessThanOrEqual(0.6);
+    expect(el!.detail).toContain('à vérifier manuellement');
   });
 
   it('niveau AAA : un contraste AA-conforme (5:1) devient une issue minor', () => {
@@ -227,7 +250,7 @@ describe('color-contrast : détections', () => {
       body: { backgroundColor: '#ffffff' },
     });
     expect(issues).toHaveLength(1);
-    expect(issues[0].elements).toHaveLength(2);
+    expect(issues[0]!.elements).toHaveLength(2);
   });
 
   it('opacité cumulée parent+enfant prise en compte (confiance ≤ 0.85)', () => {
@@ -239,14 +262,17 @@ describe('color-contrast : détections', () => {
     });
     expect(issues.length).toBeGreaterThanOrEqual(0); // selon mélange exact
     if (issues.length > 0) {
-      expect(issues[0].elements[0].confidence).toBeLessThanOrEqual(0.85);
+      expect(issues[0]!.elements[0].confidence).toBeLessThanOrEqual(0.85);
     }
   });
 });
 
 describe('color-contrast : intégrité MV3', () => {
   it('les issues sont structurally cloneable', () => {
-    const issues = evaluate(PAGE, { '.t': { color: '#eeeeee' }, body: { backgroundColor: '#ffffff' } });
+    const issues = evaluate(PAGE, {
+      '.t': { color: '#eeeeee' },
+      body: { backgroundColor: '#ffffff' },
+    });
     expect(() => structuredClone(issues)).not.toThrow();
   });
 });

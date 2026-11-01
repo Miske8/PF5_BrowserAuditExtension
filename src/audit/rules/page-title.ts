@@ -35,7 +35,13 @@ export const pageTitleRule = defineRule({
         {
           elements: titleEl
             ? [finding(titleEl, '<title> vide')]
-            : [{ tag: 'head', snippet: '<head>…</head>', detail: 'aucun élément <title>' }],
+            : [
+                {
+                  tag: 'head',
+                  snippet: '<head>…</head>',
+                  detail: 'aucun élément <title>',
+                },
+              ],
         },
       ],
     };

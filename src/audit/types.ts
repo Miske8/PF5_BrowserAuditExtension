@@ -52,7 +52,8 @@ export interface RawAuditOutput {
 
 /** Résultat d'un audit au niveau service/popup (Étapes 5 & 9). */
 export type AuditRunResult =
-  | { ok: true; output: RawAuditOutput }
+  /** Succès : rapport complet prêt à être affiché/exporté (Étape 8). */
+  | { ok: true; report: import('./report-builder').A11yReport }
   | { ok: false; code: AuditFailureCode; message: string };
 
 /** Codes d'échec d'un audit — gérés dans l'UI (Étape 12). */

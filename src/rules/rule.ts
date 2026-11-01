@@ -37,6 +37,8 @@ export interface RuleMeta {
   title: string;
   /** Description du problème et de son impact (générique, surchargeable par issue). */
   description: string;
+  /** Impact utilisateur concret (« Un lecteur d'écran ne peut pas… »), surchargeable par issue. */
+  impact?: string;
   /** Sévérité par défaut des issues produites. */
   severity: Severity;
   /** Famille de la règle (filtres UI, regroupement rapport). */

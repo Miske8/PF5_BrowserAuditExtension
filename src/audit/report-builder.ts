@@ -125,7 +125,9 @@ export function toExecutedRules(output: RawAuditOutput): ExecutedRule[] {
 }
 
 /** Compte les statuts d'exécution des règles pour `rulesStats`. */
-export function countRuleStatuses(traces: readonly ExecutedRule[]): A11yReport['rulesStats'] {
+export function countRuleStatuses(
+  traces: readonly ExecutedRule[],
+): A11yReport['rulesStats'] {
   const stats = {
     total: traces.length,
     executed: 0,
@@ -166,7 +168,10 @@ export interface BuildReportOptions {
  * Construit le rapport final depuis la sortie du moteur.
  * Fonction pure et déterministe — tout est recalculé à partir de `output`.
  */
-export function buildReport(output: RawAuditOutput, options: BuildReportOptions = {}): A11yReport {
+export function buildReport(
+  output: RawAuditOutput,
+  options: BuildReportOptions = {},
+): A11yReport {
   const aggregates: AuditAggregates = buildAggregates(output);
   const score = computeScore(output.issues);
   const rulesExecuted = toExecutedRules(output);

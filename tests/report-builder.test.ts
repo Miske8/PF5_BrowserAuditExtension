@@ -114,7 +114,14 @@ describe('toExecutedRules / countRuleStatuses', () => {
       { ruleId: 'c', title: '', severity: 'minor', status: 'error', issueCount: 0 },
       { ruleId: 'd', title: '', severity: 'minor', status: 'skipped', issueCount: 0 },
     ]);
-    expect(stats).toEqual({ total: 4, executed: 3, passed: 1, failed: 1, skipped: 1, errored: 1 });
+    expect(stats).toEqual({
+      total: 4,
+      executed: 3,
+      passed: 1,
+      failed: 1,
+      skipped: 1,
+      errored: 1,
+    });
   });
 });
 
@@ -161,7 +168,9 @@ describe('buildReport — intégration moteur → rapport', () => {
     const withoutRule = buildReport(
       runAudit(doc, URL, { disabledRules: ['image-alt'] as never }, BASE_RULES),
     );
-    expect(withoutRule.rulesExecuted.find((r) => r.ruleId === 'image-alt')?.status).toBe('skipped');
+    expect(withoutRule.rulesExecuted.find((r) => r.ruleId === 'image-alt')?.status).toBe(
+      'skipped',
+    );
     expect(withoutRule.rulesStats.skipped).toBe(1);
     expect(withoutRule.score.score).toBeGreaterThan(withRule.score.score);
   });
@@ -191,7 +200,7 @@ describe('buildReport — intégration moteur → rapport', () => {
     // Aperçu compact vérifiant la présence des clés contractuelles.
     const shape = {
       keys: Object.keys(report).sort(),
-      issueKeys: Object.keys(report.issues[0]).sort(),
+      issueKeys: Object.keys(report.issues[0]!).sort(),
     };
     expect(shape.keys).toEqual(
       [

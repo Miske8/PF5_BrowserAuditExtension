@@ -46,7 +46,13 @@ export const ariaHiddenFocusableRule = defineRule({
     if (unique.length === 0) return { passed: true, issues: [] };
     return {
       passed: false,
-      issues: [{ elements: unique.map((el) => finding(el, 'focusable mais caché par aria-hidden="true"')) }],
+      issues: [
+        {
+          elements: unique.map((el) =>
+            finding(el, 'focusable mais caché par aria-hidden="true"'),
+          ),
+        },
+      ],
     };
   },
 });

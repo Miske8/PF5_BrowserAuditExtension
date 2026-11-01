@@ -9,7 +9,11 @@
  */
 
 import { defineRule } from '../../rules/rule';
-import { findAssociatedLabel, hasNonEmptyAttr, isFormFieldElement } from '../../utils/dom';
+import {
+  findAssociatedLabel,
+  hasNonEmptyAttr,
+  isFormFieldElement,
+} from '../../utils/dom';
 import { fieldIdentity, finding, hasDirectLegend } from './helpers';
 
 export const formFieldNameRule = defineRule({
@@ -46,12 +50,10 @@ export const formFieldNameRule = defineRule({
 
       const labelledBy = el.getAttribute('aria-labelledby');
       if (labelledBy) {
-        const resolves = labelledBy
-          .split(/\s+/)
-          .some((id) => {
-            const target = doc.getElementById(id);
-            return target !== null && (target.textContent ?? '').trim() !== '';
-          });
+        const resolves = labelledBy.split(/\s+/).some((id) => {
+          const target = doc.getElementById(id);
+          return target !== null && (target.textContent ?? '').trim() !== '';
+        });
         if (resolves) continue;
       }
 
@@ -66,7 +68,10 @@ export const formFieldNameRule = defineRule({
       issues: [
         {
           elements: bad.map((el) =>
-            finding(el, `champ ${fieldIdentity(el)} sans nom accessible (label/ARIA/title absents)`),
+            finding(
+              el,
+              `champ ${fieldIdentity(el)} sans nom accessible (label/ARIA/title absents)`,
+            ),
           ),
         },
       ],
