@@ -8,11 +8,21 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const runAuditOnActiveTab = vi.fn();
 const loadLastReport = vi.fn();
+const loadPreferences = vi.fn();
 
 vi.mock('../src/services/executor', () => ({
   runAuditOnActiveTab: (...args: unknown[]) => runAuditOnActiveTab(...args),
   loadLastReport: (...args: unknown[]) => loadLastReport(...args),
 }));
+
+// Les préférences sont mockées : run() les charge en async avant l'audit.
+vi.mock('../src/services/preferences', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../src/services/preferences')>();
+  return {
+    ...actual,
+    loadPreferences: () => loadPreferences(),
+  };
+});
 
 import { initPopup, bindElements, renderState, toUiState } from '../src/popup/main';
 import type { A11yReport } from '../src/audit/report-builder';
@@ -100,6 +110,13 @@ beforeEach(() => {
   runAuditOnActiveTab.mockReset();
   loadLastReport.mockReset();
   loadLastReport.mockResolvedValue(null);
+  loadPreferences.mockReset();
+  loadPreferences.mockResolvedValue({
+    disabledRuleIds: [],
+    contrastLevel: 'AA',
+    sensitivity: 'standard',
+  });
+  runAuditOnActiveTab.mockResolvedValue({ ok: false, code: 'NO_TAB', message: 'stub' });
 });
 
 describe('structure accessible de la popup', () => {
@@ -176,11 +193,14 @@ describe('machine à états', () => {
     initPopup(root);
     const button = root.querySelector<HTMLButtonElement>('#run-audit')!;
     button.click();
-    button.click();
-    button.click();
-    // disabled=true empêche les clics ; on vérifie aussi l'état interne
+    await vi.waitFor(() => expect(runAuditOnActiveTab).toHaveBeenCalledTimes(1));
+    // Le bouton est désormais désactivé : les clics suivants sont ignorés.
     expect(button.disabled).toBe(true);
+    button.click();
+    button.click();
     expect(runAuditOnActiveTab).toHaveBeenCalledTimes(1);
+    // Filet de sécurité interne (indépendant du DOM) : run() ignore si loading.
+    await vi.waitFor(() => expect(button.disabled).toBe(true));
   });
 
   it('erreur typée rendue avec rôle alert et bouton Réessayer', async () => {
