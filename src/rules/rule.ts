@@ -72,8 +72,12 @@ export interface RuleResult {
   issues: RawIssue[];
 }
 
-/** Fonction d'évaluation d'une règle. Doit rester synchrone et pure. */
-export type RuleEvaluate = (ctx: AuditContext) => RuleResult;
+/**
+ * Fonction d'évaluation d'une règle. Doit rester pure vis-à-vis du contexte.
+ * Elle peut être asynchrone (cas de l'intégration optionnelle axe-core, dont
+ * `axe.run` retourne une promesse) : le runner attend alors la résolution.
+ */
+export type RuleEvaluate = (ctx: AuditContext) => RuleResult | Promise<RuleResult>;
 
 /** Contrat complet d'une règle d'audit. */
 export interface AuditRule extends RuleMeta {
