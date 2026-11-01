@@ -88,7 +88,10 @@ export function renderSeveritySummary(report: A11yReport): HTMLElement {
 }
 
 /** Liste complète des problèmes du rapport. */
-export function renderIssuesList(report: A11yReport): HTMLElement {
+export function renderIssuesList(
+  report: A11yReport,
+  actions: ResultsActions = {},
+): HTMLElement {
   if (report.issues.length === 0) {
     return el('section', { class: 'results results--clean' }, [
       el('p', { class: 'results__empty' }, [
@@ -98,7 +101,7 @@ export function renderIssuesList(report: A11yReport): HTMLElement {
   }
   const list = el('ol', { class: 'issues-list' });
   for (const issue of report.issues) {
-    list.append(renderIssueCard(issue));
+    list.append(renderIssueCard(issue, actions));
   }
   return el('section', { class: 'results' }, [
     el('h2', { class: 'section-title' }, [text('Détail des problèmes')]),
@@ -107,7 +110,10 @@ export function renderIssuesList(report: A11yReport): HTMLElement {
 }
 
 /** Une carte de problème : titre, sévérité, description, éléments, reco. */
-export function renderIssueCard(issue: AuditIssue): HTMLElement {
+export function renderIssueCard(
+  issue: AuditIssue,
+  actions: ResultsActions = {},
+): HTMLElement {
   const details = el('details', { class: `issue issue--${issue.severity}` });
   const summary = el('summary', { class: 'issue__header' }, [
     el('span', { class: `badge badge--${issue.severity}` }, [
@@ -168,7 +174,31 @@ export function renderIssueCard(issue: AuditIssue): HTMLElement {
     body.append(el('p', { class: 'issue__wcag' }, [text(issue.wcag)]));
   }
 
-  const actions = el('div', { class: 'issue__actions' });
+  const actionsRow = el('div', { class: 'issue__actions' });
+
+  // Surligner dans la page (fonctionnalité highlight) : premier bouton,
+  // action principale quand l'issue est surlignable. Le libellé accessible
+  // inclut le nombre d'éléments ciblés ; le résultat est annoncé par la
+  // live region de la popup (voir main.ts::highlightAndAnnounce).
+  if (actions.onHighlight && isHighlightable(issue)) {
+    const targetCount = issue.elements.filter(
+      (finding) => typeof finding.selector === 'string' && finding.selector !== '',
+    ).length;
+    const highlightButton = el('button', {
+      type: 'button',
+      class: 'btn btn--primary issue__highlight',
+      title: `Fait défiler la page jusqu'à cet élément et l'entoure temporairement (${targetCount} élément(s))`,
+    }, [text('Surligner')]);
+    highlightButton.addEventListener('click', () => {
+      actions.onHighlight?.(issue);
+      highlightButton.textContent = 'Surligné ✓';
+      window.setTimeout(() => {
+        highlightButton.textContent = 'Surligner';
+      }, 2000);
+    });
+    actionsRow.append(highlightButton);
+  }
+
   const copyButton = el('button', { type: 'button', class: 'btn btn--ghost' }, [
     text('Copier les détails'),
   ]);
@@ -179,11 +209,11 @@ export function renderIssueCard(issue: AuditIssue): HTMLElement {
       copyButton.textContent = 'Copier les détails';
     }, 2000);
   });
-  actions.append(copyButton);
+  actionsRow.append(copyButton);
 
   const docUrl = documentationUrl(issue);
   if (docUrl) {
-    actions.append(
+    actionsRow.append(
       el(
         'a',
         {
@@ -196,7 +226,7 @@ export function renderIssueCard(issue: AuditIssue): HTMLElement {
       ),
     );
   }
-  body.append(actions);
+  body.append(actionsRow);
 
   details.append(body);
   return details;
@@ -258,7 +288,10 @@ function wcagCriterion(wcag: string | undefined): string | null {
 }
 
 /** Assemblage complet de la vue « résultats ». */
-export function renderResults(report: A11yReport): DocumentFragment {
+export function renderResults(
+  report: A11yReport,
+  actions: ResultsActions = {},
+): DocumentFragment {
   const fragment = document.createDocumentFragment();
 
   fragment.append(renderScoreCard(report));
@@ -270,7 +303,7 @@ export function renderResults(report: A11yReport): DocumentFragment {
     ]),
   );
   fragment.append(renderSeveritySummary(report));
-  fragment.append(renderIssuesList(report));
+  fragment.append(renderIssuesList(report, actions));
 
   // Actions d'export (Étape 16) : les services purs sont chargés paresseusement
   // pour garder le premier rendu de la popup léger.
