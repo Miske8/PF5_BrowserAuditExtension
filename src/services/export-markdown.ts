@@ -26,7 +26,9 @@ export function serializeReportMarkdown(report: A11yReport): string {
   out.push(
     `- **Score A11y Lens** : ${report.score.score}/100 (${report.score.level.toUpperCase()})`,
   );
-  out.push(`- **Outil** : ${report.meta.tool} v${report.meta.version} (schéma ${report.meta.schemaVersion})`);
+  out.push(
+    `- **Outil** : ${report.meta.tool} v${report.meta.version} (schéma ${report.meta.schemaVersion})`,
+  );
   out.push('');
 
   out.push('## Résumé par sévérité');
@@ -41,7 +43,7 @@ export function serializeReportMarkdown(report: A11yReport): string {
   out.push('');
 
   if (report.issues.length === 0) {
-    out.push("✅ Aucun problème détecté par les règles activées.");
+    out.push('✅ Aucun problème détecté par les règles activées.');
     out.push('');
   } else {
     out.push(`## Problèmes (${report.issues.length})`);
@@ -58,7 +60,9 @@ export function serializeReportMarkdown(report: A11yReport): string {
         out.push(`- \`${el.selector}\` — \`${el.snippet}\``);
       }
       if (issue.elements.length > 5) {
-        out.push(`- … ${issue.elements.length - 5} élément(s) de plus (voir l'export JSON/CSV)`);
+        out.push(
+          `- … ${issue.elements.length - 5} élément(s) de plus (voir l'export JSON/CSV)`,
+        );
       }
       out.push('', `**Recommandation :** ${issue.recommendation}`);
       out.push('');

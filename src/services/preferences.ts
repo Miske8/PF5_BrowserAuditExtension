@@ -54,7 +54,9 @@ export function sanitizePreferences(raw: unknown): A11yPreferences {
     disabledRuleIds: Array.isArray(candidate.disabledRuleIds)
       ? [
           ...new Set(
-            candidate.disabledRuleIds.filter((id): id is string => typeof id === 'string'),
+            candidate.disabledRuleIds.filter(
+              (id): id is string => typeof id === 'string',
+            ),
           ),
         ]
       : [],

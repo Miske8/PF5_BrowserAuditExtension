@@ -4,6 +4,7 @@
  * rendu des résultats, persistance restaurée, anti double-clic.
  */
 
+import type * as PreferencesModule from '../src/services/preferences';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const runAuditOnActiveTab = vi.fn();
@@ -17,7 +18,7 @@ vi.mock('../src/services/executor', () => ({
 
 // Les préférences sont mockées : run() les charge en async avant l'audit.
 vi.mock('../src/services/preferences', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../src/services/preferences')>();
+  const actual = await importOriginal<typeof PreferencesModule>();
   return {
     ...actual,
     loadPreferences: () => loadPreferences(),
@@ -159,7 +160,7 @@ describe('machine à états', () => {
 
   it('loading → done via clic : aria-busy, bouton désactivé puis résultats', async () => {
     const report = fakeReport();
-    let resolveRun: ((r: { ok: true; report: A11yReport }) => void) | null = null;
+    let resolveRun: ((r: { ok: true; report: A11yReport }) => void) | undefined;
     runAuditOnActiveTab.mockImplementation(
       () => new Promise((resolve) => (resolveRun = resolve)),
     );
