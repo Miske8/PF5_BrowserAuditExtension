@@ -47,15 +47,27 @@ a11y-lens/
 
 ## Commandes
 
-| Commande                             | Rôle                                                 |
-| ------------------------------------ | ---------------------------------------------------- |
-| `npm run dev`                        | Dev server Vite (prévisualisation popup) — étape 9   |
-| `npm run build`                      | `tsc --noEmit` + build Vite + génération du manifest |
-| `npm test`                           | Tests unitaires (Vitest + happy-dom)                 |
-| `npm run test:watch`                 | Tests en watch mode                                  |
-| `npm run lint`                       | ESLint                                               |
-| `npm run format`                     | Prettier --write                                     |
-| `node scripts/generate-manifest.mjs` | Régénère `dist/manifest.json` seul                   |
+| Commande             | Rôle                                                                          |
+| -------------------- | ----------------------------------------------------------------------------- |
+| `npm run dev`        | Dev server Vite (prévisualisation de la popup dans un navigateur) — étape 9   |
+| `npm run build`      | Typecheck + génération du manifest + build Vite → `dist/` chargeable tel quel |
+| `npm run preview`    | Sert le build (`vite preview`) — aperçu rapide des pages statiques            |
+| `npm test`           | Tests unitaires (Vitest + happy-dom)                                          |
+| `npm run test:watch` | Tests en watch mode                                                           |
+| `npm run lint`       | ESLint                                                                        |
+| `npm run typecheck`  | `tsc --noEmit` (src + tests/scripts)                                          |
+| `npm run manifest`   | Régénère `dist/manifest.json` seul                                            |
+| `npm run format`     | Prettier `--write`                                                            |
+
+## Choix : CRXJS Vite Plugin — non retenu
+
+`@crxjs/vite-plugin` a été évalué puis écarté pour A11y Lens :
+
+- **Incompatibilité de version** : CRXJS v3 exige Vite 6+, alors que le projet est stabilisé sur Vite 5 (downgrade de CRXJS v2 = plugin historique en beta, HMR MV3 capricieux).
+- **Architecture contraire aux contraintes** : CRXJS est optimisé pour les content scripts déclaratifs permanents avec rechargement à chaud. Or A11y Lens injecte son audit **à la demande** via `chrome.scripting.executeScript` (`activeTab`), sans content script permanent.
+- **Maîtrise du manifest** : le manifest est généré par un script Node dédié (`scripts/manifest.config.mjs` = source de vérité, typé et **testé par Vitest**), ce qui garantit des permissions minimales vérifiables en CI — plus transparent qu'une génération implicite par plugin.
+
+Un retour à CRXJS reste trivial si un besoin de dev HMR complet se fait sentir (Étape 16).
 
 ## Plan de développement
 
