@@ -26,6 +26,9 @@ a11y-lens/
 ├── scripts/                  # Outils Node (ESM)
 │   ├── manifest.config.mjs   # Contrat du manifest V3 (source de vérité)
 │   ├── generate-manifest.mjs # Génère dist/manifest.json
+│   ├── generate-icons.mjs    # Rasterise icon.svg -> PNG 16/32/48/128
+│   ├── vite-plugin-icons.mjs # Copie src/assets/icons -> dist/icons au build
+│   ├── icon.svg              # Source vectorielle de l'icône (loupe + A)
 │   └── lib/fs-utils.mjs      # Helpers fs
 ├── src/
 │   ├── audit/                # Moteur d'audit + règles (étapes 5-7)
@@ -34,8 +37,8 @@ a11y-lens/
 │   ├── popup/                # UI popup (HTML/TS/CSS, étapes 9-10)
 │   ├── options/              # Page d'options (étape 13)
 │   ├── utils/                # Utilitaires transverses
-│   ├── types/                # Types globaux
-│   └── assets/icons/         # Icônes de l'extension
+│   ├── types/                # Types globaux + déclarations de modules .mjs
+│   └── assets/icons/         # Icônes PNG de l'extension (générées)
 ├── tests/                    # Tests Vitest (happy-dom)
 ├── tsconfig.base.json        # Options TS partagées (strict)
 ├── tsconfig.json             # Typage du code applicatif (src/)
@@ -44,6 +47,20 @@ a11y-lens/
 ├── eslint.config.js          # ESLint flat config
 └── .prettierrc.json          # Prettier
 ```
+
+## Manifest V3 et permissions (Étape 3)
+
+Le `manifest.json` est **généré** (jamais écrit à la main) depuis `scripts/manifest.config.mjs`, testé par Vitest. Permissions retenues :
+
+| Permission  | Pourquoi                                                                                                                                                      |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `activeTab` | Accès temporaire à l'onglet actif **uniquement quand l'utilisateur clique sur l'icône** ; remplace toute `host_permissions` large (`<all_urls>` non demandé). |
+| `scripting` | Injection à la demande de la fonction d'audit via `chrome.scripting.executeScript` — aucun content script permanent déclaré.                                  |
+| `storage`   | Préférences utilisateur (Étape 13) et cache du dernier rapport entre ouvertures de la popup.                                                                  |
+
+- `host_permissions` : **absente** (vérifiée par test unitaire).
+- `content_scripts` : **absents** (vérifié par test unitaire).
+- Icônes 16/32/48/128 px générées depuis `scripts/icon.svg` (`@resvg/resvg-js`), copiées dans `dist/icons/` par le plugin Vite maison.
 
 ## Commandes
 
@@ -57,6 +74,7 @@ a11y-lens/
 | `npm run lint`       | ESLint                                                                        |
 | `npm run typecheck`  | `tsc --noEmit` (src + tests/scripts)                                          |
 | `npm run manifest`   | Régénère `dist/manifest.json` seul                                            |
+| `npm run icons`      | Régénère les icônes PNG depuis `scripts/icon.svg`                             |
 | `npm run format`     | Prettier `--write`                                                            |
 
 ## Choix : CRXJS Vite Plugin — non retenu
@@ -72,8 +90,8 @@ Un retour à CRXJS reste trivial si un besoin de dev HMR complet se fait sentir 
 ## Plan de développement
 
 - [x] Étape 1 : initialisation du projet
-- [ ] Étape 2 : architecture et structure des dossiers
-- [ ] Étape 3 : manifest.json et permissions minimales
+- [x] Étape 2 : architecture et structure des dossiers
+- [x] Étape 3 : manifest.json et permissions minimales
 - [ ] Étape 4 : types et contrat des règles d'audit
 - [ ] Étape 5 : moteur d'audit
 - [ ] Étape 6 : règles d'accessibilité de base

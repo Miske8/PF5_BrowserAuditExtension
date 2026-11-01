@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "manifest": "node scripts/generate-manifest.mjs",
+    "icons": "node scripts/generate-icons.mjs",
     "build": "npm run typecheck && npm run manifest && vite build",
     "preview": "vite preview",
     "test": "vitest run",
@@ -18,6 +19,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",
+    "@resvg/resvg-js": "^2.6.2",
     "@types/chrome": "^0.0.323",
     "@types/node": "^20.19.43",
     "eslint": "^9.39.0",

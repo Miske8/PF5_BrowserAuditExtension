@@ -1,9 +1,14 @@
 // @ts-check
 /**
- * Contrat du manifest V3 de A11y Lens.
- * Permissions minimales : activeTab + scripting uniquement.
- * Aucun content script permanent n'est déclaré : l'audit est injecté à la demande
- * via chrome.scripting (détaillé aux Étapes 3 et 5).
+ * Contrat du manifest V3 de A11y Lens (Étape 3).
+ * Source unique de vérité du manifest ; `generate-manifest.mjs` écrit dist/manifest.json.
+ *
+ * Permissions minimales :
+ * - activeTab : accès temporaire à l'onglet actif au clic sur l'icône (sans host permissions)
+ * - scripting : injection à la demande de la fonction d'audit (aucun content script permanent)
+ * - storage   : préférences utilisateur (Étape 13) et dernier rapport en cache
+ *
+ * Aucune `host_permissions` : l'extension ne peut pas lire les pages arbitraires en arrière-plan.
  */
 
 /** @type {{ [key: string]: string }} */
@@ -21,7 +26,7 @@ export function buildManifest() {
     name: 'A11y Lens',
     version: '0.1.0',
     description:
-      "Audite l'accessibilité de la page active : images sans alt, noms accessibles manquants, titres, contraste, etc.",
+      "A11y Lens — extension d'audit d'accessibilité : analyse la page active (images sans alt, noms accessibles, titres, contraste…) et affiche un rapport dans la popup.",
     minimum_chrome_version: '116',
     action: {
       default_popup: 'src/popup/index.html',
@@ -32,7 +37,7 @@ export function buildManifest() {
       page: 'src/options/index.html',
       open_in_tab: true,
     },
-    permissions: ['activeTab', 'scripting'],
+    permissions: ['activeTab', 'scripting', 'storage'],
     icons: ICON_PATHS,
   };
 }

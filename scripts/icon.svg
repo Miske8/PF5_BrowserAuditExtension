@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="24" fill="#1d4ed8"/>
+  <!-- loupe -->
+  <circle cx="56" cy="56" r="30" fill="#ffffff"/>
+  <circle cx="56" cy="56" r="22" fill="#eff6ff"/>
+  <rect x="78" y="78" width="14" height="34" rx="7" transform="rotate(-45 85 95)" fill="#ffffff"/>
+  <!-- "A" stylisé dans la lentille -->
+  <path d="M56 38 L46 70 M56 38 L66 70 M49 60 L63 60" stroke="#1d4ed8" stroke-width="6" stroke-linecap="round" fill="none"/>
+</svg>

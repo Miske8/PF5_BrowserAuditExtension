@@ -9,7 +9,18 @@ describe('manifest V3', () => {
   });
 
   it('demande uniquement les permissions minimales', () => {
-    expect(manifest.permissions).toEqual(['activeTab', 'scripting']);
+    expect(manifest.permissions).toEqual(['activeTab', 'scripting', 'storage']);
+  });
+
+  it('ne déclare aucune host permission', () => {
+    expect(manifest['host_permissions']).toBeUndefined();
+  });
+
+  it('déclare des icônes pour l’action et le manifest', () => {
+    const icons = manifest.icons as Record<string, string>;
+    expect(Object.keys(icons).sort()).toEqual(['128', '16', '32', '48']);
+    const action = manifest.action as Record<string, unknown>;
+    expect(action['default_icon']).toEqual(icons);
   });
 
   it('ne déclare aucun content script permanent', () => {
