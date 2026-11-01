@@ -41,9 +41,17 @@ export interface PopupElements {
 /** Raccourcis clavier globaux de la popup (Étape 16). */
 const SHORTCUT_MODIFIER = /Mac|iPhone|iPad/.test(navigator.platform ?? '') ? '⌘' : 'Ctrl';
 
-/** Met à jour le badge du bouton « Analyser » avec le raccourci. */
+/** Libellé canonique du bouton d'audit (sans mention du raccourci). */
+export const RUN_BUTTON_LABEL = 'Analyser la page';
+
+/**
+ * Met à jour le libellé du bouton « Analyser ».
+ * Le raccourci (⌘/Ctrl+Entrée) n'est PAS affiché dans le texte du bouton :
+ * il est indiqué dans le `title` et l'aide clavier (`?`) — le texte visible
+ * reste identique au libellé accessible (WCAG 2.5.3), sans espace parasite.
+ */
 export function updateRunButtonLabel(button: HTMLButtonElement, busy: boolean): void {
-  button.textContent = busy ? 'Analyse en cours…' : `Analyser la page (${SHORTCUT_MODIFIER}+Enter)`;
+  button.textContent = busy ? 'Analyse en cours…' : RUN_BUTTON_LABEL;
 }
 
 /** Récupère les éléments statiques de la popup (lève si DOM inattendu). */
@@ -100,9 +108,8 @@ export function renderState(
       );
       // Hiérarchie visuelle (Étape 16) : le premier problème critique est
       // dépliable d'emblée pour guider l'attention sans surcharger la vue.
-      const firstCritical = dom.resultBody.querySelector<HTMLDetailsElement>(
-        '.issue--critical',
-      );
+      const firstCritical =
+        dom.resultBody.querySelector<HTMLDetailsElement>('.issue--critical');
       if (firstCritical) firstCritical.open = true;
       return;
     }
@@ -195,11 +202,18 @@ export function initPopup(root: ParentNode = document): {
       void run();
       return;
     }
-    if (event.key === '?' && !(event.target instanceof HTMLInputElement)) {
+    // Aide clavier « ? » : uniquement quand aucune zone éditable n'a le focus
+    // (sinon le caractère doit pouvoir être saisi normalement).
+    const target = event.target as HTMLElement | null;
+    const isEditableTarget =
+      target instanceof HTMLInputElement ||
+      target instanceof HTMLTextAreaElement ||
+      target?.isContentEditable === true;
+    if (event.key === '?' && !isEditableTarget) {
       event.preventDefault();
       announce(
         dom.resultRegion,
-        `Raccourcis : ${SHORTCUT_MODIFIER}+Entrée pour analyser, barre d'espace pour activer un bouton, Entrée sur une carte pour la déplier.`,
+        `Raccourcis : ${SHORTCUT_MODIFIER}+Entrée pour analyser, point d'interrogation pour cette aide, Échap pour aller au résultat, Tab pour naviguer, Entrée sur une carte pour la déplier.`,
       );
       return;
     }

@@ -192,8 +192,8 @@ async function copyIssueDetails(issue: AuditIssue): Promise<void> {
   const lines = [
     `[${SEVERITY_LABELS_FR[issue.severity]}] ${issue.title} (${issue.ruleId})`,
     issue.description,
-    ...issue.elements.map(
-      (element) => `  • ${element.selector ?? element.tag ?? 'élément'} ${element.snippet ?? ''}`.trimEnd(),
+    ...issue.elements.map((element) =>
+      `  • ${element.selector ?? element.tag ?? 'élément'} ${element.snippet ?? ''}`.trimEnd(),
     ),
     `Recommandation : ${issue.recommendation}`,
     issue.wcag ? `Référence : ${issue.wcag}` : '',
@@ -276,13 +276,13 @@ async function importExport(
   report: A11yReport,
 ): Promise<void> {
   if (format === 'json') {
-    const { exportReportJson } = await import('../services/export-json');
+    const { exportReportJson } = await import('../../services/export-json');
     exportReportJson(report);
   } else if (format === 'csv') {
-    const { exportReportCsv } = await import('../services/export-csv');
+    const { exportReportCsv } = await import('../../services/export-csv');
     exportReportCsv(report);
   } else {
-    const { copyReportMarkdown } = await import('../services/export-markdown');
+    const { copyReportMarkdown } = await import('../../services/export-markdown');
     await copyReportMarkdown(report);
   }
 }
