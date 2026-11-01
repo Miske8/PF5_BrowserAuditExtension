@@ -188,9 +188,10 @@ function resolveBackground(
   }
 
   // Aplatissement : on part du fond le plus bas (opaque ou blanc) vers le haut.
-  let base: Rgb = opaqueFound && layers.length > 0
-    ? { ...layers[layers.length - 1]!, a: 1 }
-    : { r: 255, g: 255, b: 255, a: 1 };
+  let base: Rgb =
+    opaqueFound && layers.length > 0
+      ? { ...layers[layers.length - 1]!, a: 1 }
+      : { r: 255, g: 255, b: 255, a: 1 };
   for (let i = layers.length - 2; i >= 0; i -= 1) {
     base = blendOver(layers[i]!, base);
   }
@@ -260,7 +261,8 @@ export const colorContrastRule = defineRule({
     const all = ctx.document.querySelectorAll<HTMLElement>('body *');
     for (const el of Array.from(all)) {
       const tag = el.tagName.toUpperCase();
-      if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'NOSCRIPT' || tag === 'TEMPLATE') continue;
+      if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'NOSCRIPT' || tag === 'TEMPLATE')
+        continue;
       const text = ownText(el);
       if (text === '') continue;
       if (el.getAttribute('aria-hidden') === 'true' || insideAriaHidden(el)) continue;
@@ -327,8 +329,7 @@ export const colorContrastRule = defineRule({
           severity === 'critical'
             ? 'Le ratio de contraste descend sous 1.5:1 : le texte se confond presque totalement avec son fond.'
             : `Des textes n’atteignent pas le ratio minimal WCAG ${level} (${normalThreshold}:1 normal, ${largeThreshold}:1 gros texte). Le fond est reconstruit par estimation quand il est translucide.`,
-        recommendation:
-          `Modifier la couleur de texte ou de fond pour atteindre au moins ${normalThreshold}:1 (texte normal) et ${largeThreshold}:1 (gros texte) — niveau ${level}.`,
+        recommendation: `Modifier la couleur de texte ou de fond pour atteindre au moins ${normalThreshold}:1 (texte normal) et ${largeThreshold}:1 (gros texte) — niveau ${level}.`,
         wcag: level === 'AAA' ? 'WCAG 1.4.6 (AAA)' : 'WCAG 1.4.3 (AA)',
         elements: items.map((item) => ({
           ...item.finding,

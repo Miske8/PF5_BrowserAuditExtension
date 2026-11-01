@@ -37,7 +37,9 @@ export const tabindexPositiveRule = defineRule({
       passed: false,
       issues: [
         {
-          elements: bad.map((el) => finding(el, `tabindex="${el.getAttribute('tabindex')}"`)),
+          elements: bad.map((el) =>
+            finding(el, `tabindex="${el.getAttribute('tabindex')}"`),
+          ),
         },
       ],
     };

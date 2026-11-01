@@ -3,11 +3,74 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>A11y Lens</title>
+    <title>A11y Lens — audit d’accessibilité</title>
+    <link rel="stylesheet" href="./popup.css" />
   </head>
   <body>
-    <!-- UI popup : implémentée à l'Étape 9 -->
-    <div id="app"></div>
+    <a class="skip-link" href="#result-region">Aller au résultat de l’audit</a>
+
+    <div class="app">
+      <!-- En-tête -->
+      <header class="header">
+        <h1 class="header__title">
+          <svg
+            class="header__logo"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <circle
+              cx="10"
+              cy="10"
+              r="6.5"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            />
+            <line
+              x1="15"
+              y1="15"
+              x2="21"
+              y2="21"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+          </svg>
+          A11y Lens
+        </h1>
+        <p class="header__page" id="page-info" hidden></p>
+      </header>
+
+      <!-- Actions principales -->
+      <div class="toolbar">
+        <button type="button" id="run-audit" class="btn btn--primary">
+          Analyser la page
+        </button>
+        <button type="button" id="options-btn" class="btn btn--ghost">Préférences</button>
+      </div>
+
+      <!-- Zone de résultat : vitre accessible (rôle region + titre) -->
+      <main
+        class="content"
+        id="result-region"
+        tabindex="-1"
+        aria-labelledby="result-title"
+        role="region"
+      >
+        <h2 class="sr-only" id="result-title">Résultat de l’audit</h2>
+        <div id="result-body">
+          <!-- Rendu par main.ts : états vide / chargement / erreur / résultats -->
+        </div>
+      </main>
+
+      <footer class="footer">
+        <p class="footer__note">Audit local, aucune donnée envoyée hors du navigateur.</p>
+      </footer>
+    </div>
+
     <script type="module" src="./main.ts"></script>
   </body>
 </html>

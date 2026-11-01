@@ -52,7 +52,9 @@ export const labelRule = defineRule({
       passed: false,
       issues: [
         {
-          elements: bad.map((el) => finding(el, `champ ${fieldIdentity(el)} sans <label> associé`)),
+          elements: bad.map((el) =>
+            finding(el, `champ ${fieldIdentity(el)} sans <label> associé`),
+          ),
         },
       ],
     };

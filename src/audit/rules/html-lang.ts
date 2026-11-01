@@ -30,14 +30,20 @@ export const htmlLangRule = defineRule({
     const root = ctx.document.documentElement;
     if (!root) return { passed: true, issues: [] };
 
-    const lang = (root.getAttribute('lang') ?? root.getAttribute('xml:lang') ?? '').trim();
+    const lang = (
+      root.getAttribute('lang') ??
+      root.getAttribute('xml:lang') ??
+      ''
+    ).trim();
 
     if (lang === '') {
       return {
         passed: false,
         issues: [
           {
-            elements: [{ tag: 'html', snippet: '<html>', detail: 'attribut lang absent' }],
+            elements: [
+              { tag: 'html', snippet: '<html>', detail: 'attribut lang absent' },
+            ],
           },
         ],
       };
@@ -50,7 +56,8 @@ export const htmlLangRule = defineRule({
           {
             title: 'Langue du document invalide',
             description: `La valeur d’attribut lang « ${lang} » ne respecte pas le format BCP 47.`,
-            recommendation: 'Utiliser un code de langue valide (ex: "fr", "fr-FR", "en-GB").',
+            recommendation:
+              'Utiliser un code de langue valide (ex: "fr", "fr-FR", "en-GB").',
             elements: [finding(root, `lang="${lang}" non valide`)],
           },
         ],

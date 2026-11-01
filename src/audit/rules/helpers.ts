@@ -24,12 +24,19 @@ export function finding(el: Element, detail?: string): ElementFinding {
 }
 
 /** Occurrence « plusieurs éléments » : une issue groupée (ex: ids dupliqués). */
-export function groupedIssue(elements: ElementFinding[], overrides: Partial<RawIssue> = {}): RawIssue {
+export function groupedIssue(
+  elements: ElementFinding[],
+  overrides: Partial<RawIssue> = {},
+): RawIssue {
   return { elements, ...overrides };
 }
 
 /** Occurrence « un seul élément » : pratique pour les règles à granularité fine. */
-export function singleIssue(el: Element, detail?: string, overrides: Partial<RawIssue> = {}): RawIssue {
+export function singleIssue(
+  el: Element,
+  detail?: string,
+  overrides: Partial<RawIssue> = {},
+): RawIssue {
   return groupedIssue([finding(el, detail)], overrides);
 }
 

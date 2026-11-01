@@ -30,10 +30,7 @@ import { colorContrastRule } from '../src/audit/rules/color-contrast';
 const URL = 'https://example.com/test';
 
 function ctx(html: string, options: Partial<AuditOptions> = {}): AuditContext {
-  const doc = new DOMParser().parseFromString(
-    `<!DOCTYPE html>${html}`,
-    'text/html',
-  );
+  const doc = new DOMParser().parseFromString(`<!DOCTYPE html>${html}`, 'text/html');
   return { document: doc, url: URL, options: { ...DEFAULT_AUDIT_OPTIONS, ...options } };
 }
 
@@ -120,7 +117,10 @@ describe('registre — intégrité des 13 règles MVP', () => {
 /* ------------------------------------------------------------------ */
 describe('règle image-alt', () => {
   it('signale une <img> sans alt, avec extrait HTML et sélecteur', () => {
-    const { issues } = evaluate(imageAltRule, '<html><body><img src="chat.png" class="hero"></body></html>');
+    const { issues } = evaluate(
+      imageAltRule,
+      '<html><body><img src="chat.png" class="hero"></body></html>',
+    );
     expect(issues).toHaveLength(1);
     expect(issues[0]!.ruleId).toBe('image-alt');
     expect(issues[0]!.severity).toBe('critical');
@@ -132,8 +132,13 @@ describe('règle image-alt', () => {
   });
 
   it('accepte alt="" (décorative) mais signale alt=" "', () => {
-    expect(evaluate(imageAltRule, '<html><body><img alt="" src="x.png"></body></html>').issues).toHaveLength(0);
-    expect(evaluate(imageAltRule, '<html><body><img alt=" " src="x.png"></body></html>').issues).toHaveLength(1);
+    expect(
+      evaluate(imageAltRule, '<html><body><img alt="" src="x.png"></body></html>').issues,
+    ).toHaveLength(0);
+    expect(
+      evaluate(imageAltRule, '<html><body><img alt=" " src="x.png"></body></html>')
+        .issues,
+    ).toHaveLength(1);
   });
 
   it('dégrade role=presentation sans alt en mineur', () => {
@@ -170,8 +175,16 @@ describe('règle button-name', () => {
   });
 
   it('signale input[type=submit] sans value ni nom ARIA', () => {
-    expect(evaluate(buttonNameRule, '<html><body><input type="submit" value=""></body></html>').issues).toHaveLength(1);
-    expect(evaluate(buttonNameRule, '<html><body><input type="submit" value="Valider"></body></html>').issues).toHaveLength(0);
+    expect(
+      evaluate(buttonNameRule, '<html><body><input type="submit" value=""></body></html>')
+        .issues,
+    ).toHaveLength(1);
+    expect(
+      evaluate(
+        buttonNameRule,
+        '<html><body><input type="submit" value="Valider"></body></html>',
+      ).issues,
+    ).toHaveLength(0);
   });
 });
 
@@ -203,7 +216,10 @@ describe('règle link-name', () => {
 /* ------------------------------------------------------------------ */
 describe('règle label', () => {
   it('signale un champ sans label associé', () => {
-    const { issues } = evaluate(labelRule, '<html><body><input type="text" name="q"></body></html>');
+    const { issues } = evaluate(
+      labelRule,
+      '<html><body><input type="text" name="q"></body></html>',
+    );
     expect(issues).toHaveLength(1);
     expect(issues[0]!.severity).toBe('major');
     expect(issues[0]!.elements[0]!.detail).toContain('name="q"');
@@ -235,7 +251,10 @@ describe('règle label', () => {
 /* ------------------------------------------------------------------ */
 describe('règle form-field-name', () => {
   it('signale un champ sans AUCUN mécanisme de nom', () => {
-    const { issues } = evaluate(formFieldNameRule, '<html><body><input type="text" placeholder="E-mail"></body></html>');
+    const { issues } = evaluate(
+      formFieldNameRule,
+      '<html><body><input type="text" placeholder="E-mail"></body></html>',
+    );
     expect(issues).toHaveLength(1);
     expect(issues[0]!.elements[0]!.detail).toContain('sans nom accessible');
   });
@@ -250,7 +269,8 @@ describe('règle form-field-name', () => {
   });
 
   it('signale aria-labelledby pointant vers un id inexistant ou vide', () => {
-    const bad = '<html><body><input aria-labelledby="absent"><span id="vide"></span><input aria-labelledby="vide"></body></html>';
+    const bad =
+      '<html><body><input aria-labelledby="absent"><span id="vide"></span><input aria-labelledby="vide"></body></html>';
     const { issues } = evaluate(formFieldNameRule, bad);
     expect(issues).toHaveLength(1);
     expect(issues[0]!.elements).toHaveLength(2);
@@ -277,13 +297,19 @@ describe('règle heading-order', () => {
   });
 
   it('signale plusieurs h1 en modéré', () => {
-    const { issues } = evaluate(headingOrderRule, '<html><body><h1>A</h1><h1>B</h1></body></html>');
+    const { issues } = evaluate(
+      headingOrderRule,
+      '<html><body><h1>A</h1><h1>B</h1></body></html>',
+    );
     expect(issues.some((i) => i.title.includes('Plusieurs titres'))).toBe(true);
     expect(issues.find((i) => i.title.includes('Plusieurs'))!.severity).toBe('moderate');
   });
 
   it('signale l’absence totale de titres', () => {
-    const { issues } = evaluate(headingOrderRule, '<html><body><p>texte</p></body></html>');
+    const { issues } = evaluate(
+      headingOrderRule,
+      '<html><body><p>texte</p></body></html>',
+    );
     expect(issues).toHaveLength(1);
     expect(issues[0]!.elements).toHaveLength(0);
   });
@@ -294,19 +320,29 @@ describe('règle heading-order', () => {
 /* ------------------------------------------------------------------ */
 describe('règle html-lang', () => {
   it('signale l’absence de lang sur <html>', () => {
-    const { issues } = evaluate(htmlLangRule, '<html><head><title>T</title></head><body></body></html>');
+    const { issues } = evaluate(
+      htmlLangRule,
+      '<html><head><title>T</title></head><body></body></html>',
+    );
     expect(issues).toHaveLength(1);
     expect(issues[0]!.severity).toBe('major');
     expect(issues[0]!.elements[0]!.tag).toBe('html');
   });
 
   it('accepte lang="fr" et xml:lang en repli', () => {
-    expect(evaluate(htmlLangRule, '<html lang="fr"><body></body></html>').issues).toHaveLength(0);
-    expect(evaluate(htmlLangRule, '<html xml:lang="en"><body></body></html>').issues).toHaveLength(0);
+    expect(
+      evaluate(htmlLangRule, '<html lang="fr"><body></body></html>').issues,
+    ).toHaveLength(0);
+    expect(
+      evaluate(htmlLangRule, '<html xml:lang="en"><body></body></html>').issues,
+    ).toHaveLength(0);
   });
 
   it('signale une valeur de langue invalide', () => {
-    const { issues } = evaluate(htmlLangRule, '<html lang="francais_2024!"><body></body></html>');
+    const { issues } = evaluate(
+      htmlLangRule,
+      '<html lang="francais_2024!"><body></body></html>',
+    );
     expect(issues).toHaveLength(1);
     expect(issues[0]!.title).toContain('invalide');
   });
@@ -323,13 +359,21 @@ describe('règle page-title', () => {
   });
 
   it('signale un <title> vide', () => {
-    const { issues } = evaluate(pageTitleRule, '<html><head><title>   </title></head><body></body></html>');
+    const { issues } = evaluate(
+      pageTitleRule,
+      '<html><head><title>   </title></head><body></body></html>',
+    );
     expect(issues).toHaveLength(1);
     expect(issues[0]!.elements[0]!.detail).toContain('vide');
   });
 
   it('accepte un titre non vide', () => {
-    expect(evaluate(pageTitleRule, '<html><head><title>Accueil</title></head><body></body></html>').issues).toHaveLength(0);
+    expect(
+      evaluate(
+        pageTitleRule,
+        '<html><head><title>Accueil</title></head><body></body></html>',
+      ).issues,
+    ).toHaveLength(0);
   });
 });
 
@@ -349,7 +393,12 @@ describe('règle tabindex-positive', () => {
   });
 
   it('passe quand aucun tabindex positif', () => {
-    expect(evaluate(tabindexPositiveRule, '<html><body><a href="#" tabindex="0">x</a></body></html>').issues).toHaveLength(0);
+    expect(
+      evaluate(
+        tabindexPositiveRule,
+        '<html><body><a href="#" tabindex="0">x</a></body></html>',
+      ).issues,
+    ).toHaveLength(0);
   });
 });
 
@@ -368,7 +417,10 @@ describe('règle aria-hidden-focusable', () => {
   });
 
   it('signale l’élément lui-même focusable + aria-hidden', () => {
-    const { issues } = evaluate(ariaHiddenFocusableRule, '<html><body><a href="/x" aria-hidden="true">lien fantôme</a></body></html>');
+    const { issues } = evaluate(
+      ariaHiddenFocusableRule,
+      '<html><body><a href="/x" aria-hidden="true">lien fantôme</a></body></html>',
+    );
     expect(issues).toHaveLength(1);
   });
 
@@ -397,7 +449,12 @@ describe('règle duplicate-id', () => {
   });
 
   it('passe avec des ids uniques', () => {
-    expect(evaluate(duplicateIdRule, '<html><body><div id="a"></div><div id="b"></div></body></html>').issues).toHaveLength(0);
+    expect(
+      evaluate(
+        duplicateIdRule,
+        '<html><body><div id="a"></div><div id="b"></div></body></html>',
+      ).issues,
+    ).toHaveLength(0);
   });
 });
 
@@ -406,7 +463,10 @@ describe('règle duplicate-id', () => {
 /* ------------------------------------------------------------------ */
 describe('règle landmarks', () => {
   it('signale main/nav/header/footer manquants (4 issues distinctes)', () => {
-    const { issues } = evaluate(landmarksRule, '<html><body><div>contenu brut</div></body></html>');
+    const { issues } = evaluate(
+      landmarksRule,
+      '<html><body><div>contenu brut</div></body></html>',
+    );
     expect(issues).toHaveLength(4);
     expect(issues.find((i) => i.title.includes('<main>'))!.severity).toBe('major');
     expect(issues.filter((i) => i.severity === 'moderate')).toHaveLength(3);
@@ -423,7 +483,8 @@ describe('règle landmarks', () => {
   });
 
   it('n’exige pas header/footer si leur rôle est assumé ailleurs', () => {
-    const partial = '<html><body><main><nav aria-label="Menu"></nav></main></body></html>';
+    const partial =
+      '<html><body><main><nav aria-label="Menu"></nav></main></body></html>';
     const { issues } = evaluate(landmarksRule, partial);
     expect(issues).toHaveLength(2); // banner + contentinfo
     expect(issues.map((i) => i.title).join()).not.toContain('<main>');
@@ -448,7 +509,18 @@ describe('audit complet sur page volontairement cassée', () => {
   it('détecte au moins une issue par famille de règles', () => {
     const output = runAudit(ctx(BROKEN).document, URL);
     const ruleIds = new Set(output.issues.map((i) => i.ruleId));
-    for (const expected of ['image-alt', 'button-name', 'link-name', 'form-field-name', 'heading-order', 'html-lang', 'tabindex-positive', 'aria-hidden-focusable', 'duplicate-id', 'landmarks']) {
+    for (const expected of [
+      'image-alt',
+      'button-name',
+      'link-name',
+      'form-field-name',
+      'heading-order',
+      'html-lang',
+      'tabindex-positive',
+      'aria-hidden-focusable',
+      'duplicate-id',
+      'landmarks',
+    ]) {
       expect(ruleIds.has(expected)).toBe(true);
     }
     expect(output.errors).toHaveLength(0);

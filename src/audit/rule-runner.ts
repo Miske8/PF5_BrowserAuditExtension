@@ -59,7 +59,10 @@ function sanitizeRawIssue(value: unknown): RawIssue | null {
   }
   if (Array.isArray(raw.elements)) {
     out.elements = raw.elements
-      .filter((el): el is AuditIssue['elements'][number] => el !== null && typeof el === 'object')
+      .filter(
+        (el): el is AuditIssue['elements'][number] =>
+          el !== null && typeof el === 'object',
+      )
       .map(sanitizeElementFinding);
   }
   return out;

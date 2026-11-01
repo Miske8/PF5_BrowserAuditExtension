@@ -26,8 +26,7 @@ const CHECKS: LandmarkCheck[] = [
     key: 'main',
     label: '<main>',
     severity: 'major',
-    present: (doc) =>
-      doc.querySelector('main, [role="main"]') !== null,
+    present: (doc) => doc.querySelector('main, [role="main"]') !== null,
   },
   {
     key: 'nav',
@@ -76,7 +75,9 @@ export const landmarksRule = defineRule({
       title: `Landmark manquant : ${check.label}`,
       description: `Aucun élément « ${check.label} » (ou rôle ARIA équivalent) dans le document.`,
       severity: check.severity,
-      elements: [{ tag: 'body', snippet: '<body>…</body>', detail: `${check.label} introuvable` }],
+      elements: [
+        { tag: 'body', snippet: '<body>…</body>', detail: `${check.label} introuvable` },
+      ],
     }));
 
     return { passed: false, issues };

@@ -29,7 +29,11 @@ export const buttonNameRule = defineRule({
   evaluate: (ctx) => {
     const bad: Element[] = [];
 
-    for (const el of Array.from(ctx.document.querySelectorAll('button, [role="button"], [role="submit"], [role="reset"]'))) {
+    for (const el of Array.from(
+      ctx.document.querySelectorAll(
+        'button, [role="button"], [role="submit"], [role="reset"]',
+      ),
+    )) {
       if (!isButtonElement(el)) continue;
       if (accessibleName(el) === '') bad.push(el);
     }
@@ -44,7 +48,9 @@ export const buttonNameRule = defineRule({
       if ((value === null || value.trim() === '') && !hasAriaName) bad.push(input);
     }
 
-    for (const img of Array.from(ctx.document.querySelectorAll<HTMLInputElement>('input[type="image"]'))) {
+    for (const img of Array.from(
+      ctx.document.querySelectorAll<HTMLInputElement>('input[type="image"]'),
+    )) {
       if (!img.hasAttribute('alt') || (img.getAttribute('alt') ?? '').trim() === '') {
         if (accessibleName(img) === '') bad.push(img);
       }

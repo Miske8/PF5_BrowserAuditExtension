@@ -200,7 +200,9 @@ export function isNativelyFocusable(el: Element): boolean {
     return type !== 'hidden';
   }
   if (tag === 'IFRAME' || tag === 'SUMMARY') return true;
-  return el.hasAttribute('contenteditable') && el.getAttribute('contenteditable') !== 'false';
+  return (
+    el.hasAttribute('contenteditable') && el.getAttribute('contenteditable') !== 'false'
+  );
 }
 
 /** Vrai si l'élément est focusable au clavier (natif ou via tabindex ≥ 0). */

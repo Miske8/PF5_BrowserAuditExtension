@@ -35,7 +35,9 @@ describe('countOccurrences', () => {
   });
   it('retombe sur le nombre d\u2019éléments sinon', () => {
     const el = { selector: 'img' };
-    expect(countOccurrences(issue({ severity: 'major', elements: [el, el, el] }))).toBe(3);
+    expect(countOccurrences(issue({ severity: 'major', elements: [el, el, el] }))).toBe(
+      3,
+    );
   });
   it('vaut 1 pour une absence globale sans éléments', () => {
     expect(countOccurrences(issue({ severity: 'critical', elements: [] }))).toBe(1);
@@ -44,7 +46,9 @@ describe('countOccurrences', () => {
     expect(countOccurrences(issue({ severity: 'minor', occurrences: -3 }))).toBe(0);
     expect(countOccurrences(issue({ severity: 'minor', occurrences: 2.7 }))).toBe(2);
     expect(
-      countOccurrences(issue({ severity: 'minor', occurrences: Number.NaN, elements: [{ tag: 'a' }] })),
+      countOccurrences(
+        issue({ severity: 'minor', occurrences: Number.NaN, elements: [{ tag: 'a' }] }),
+      ),
     ).toBe(1);
   });
 });
@@ -64,7 +68,12 @@ describe('scoreLevel', () => {
   });
 
   it('libellés français complets', () => {
-    expect(Object.values(SCORE_LEVEL_LABELS_FR)).toEqual(['Excellent', 'Bon', 'Moyen', 'Faible']);
+    expect(Object.values(SCORE_LEVEL_LABELS_FR)).toEqual([
+      'Excellent',
+      'Bon',
+      'Moyen',
+      'Faible',
+    ]);
   });
 });
 
@@ -96,9 +105,13 @@ describe('computeScore', () => {
 
   it('les seuils de niveau sont appliqués au score arrondi', () => {
     // 3 occ. critiques = 12 pts de perte → 88 (bon).
-    expect(computeScore([issue({ severity: 'critical', occurrences: 3 })]).score).toBe(88);
+    expect(computeScore([issue({ severity: 'critical', occurrences: 3 })]).score).toBe(
+      88,
+    );
     // 9 occ. critiques = 36 bruts → plafond 35 → 65 (moyen).
-    expect(computeScore([issue({ severity: 'critical', occurrences: 9 })]).score).toBe(65);
+    expect(computeScore([issue({ severity: 'critical', occurrences: 9 })]).score).toBe(
+      65,
+    );
   });
 
   it('plafonne la pénalité critique à 35 points', () => {
