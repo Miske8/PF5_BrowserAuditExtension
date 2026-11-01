@@ -41,6 +41,8 @@ export const headingOrderRule = defineRule({
             severity: 'moderate',
             recommendation: 'Introduire au moins un <h1> décrivant le sujet principal, puis une hiérarchie cohérente.',
             elements: [],
+            // Absence globale = 1 seule occurrence (sinon elements.length = 0).
+            occurrences: 1,
           },
         ],
       };

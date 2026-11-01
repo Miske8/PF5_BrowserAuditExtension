@@ -53,6 +53,13 @@ export interface RuleMeta {
 export type RawIssue = Omit<Partial<AuditIssue>, 'ruleId' | 'id' | 'elements'> & {
   /** Éléments concernés (obligatoire si la règle trouve un souci localisé). */
   elements?: ElementFinding[];
+  /**
+   * Nombre d'éléments/occurrences agrégés sous cette issue.
+   * Si absent, le moteur (normalizeIssue) dérive la valeur : nombre
+   * d'`elements`, sinon 1 pour une absence globale (ex: `<html lang>`).
+   * Le score (Étape 8) pondère chaque occurrence, pas l'issue affichée.
+   */
+  occurrences?: number;
 };
 
 /** Résultat d'une évaluation de règle (avant consolidation moteur). */
@@ -100,6 +107,13 @@ export function normalizeIssue(rule: RuleMeta, raw: RawIssue, index: number): Au
     category: rule.category,
     elements: raw.elements ?? [],
   };
+  // Occurrences agrégées : surcharge explicite de la règle sinon nb d'éléments,
+  // plancher à 1 (une issue = au moins un problème) — le score (Étape 8)
+  // pondère chaque occurrence, pas l'issue affichée.
+  base.occurrences = Math.max(
+    1,
+    typeof raw.occurrences === 'number' ? raw.occurrences : base.elements.length,
+  );
   if (raw.wcag !== undefined) base.wcag = raw.wcag;
   else if (rule.wcag !== undefined) base.wcag = rule.wcag;
   if (raw.helpUrl !== undefined) base.helpUrl = raw.helpUrl;
