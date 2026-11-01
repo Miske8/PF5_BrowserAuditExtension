@@ -17,6 +17,65 @@ const IDENTIFYING_ATTRS = [
   'aria-label',
 ] as const;
 
+/** Rôles ARIA explicites portant une sémantique de lien ou de bouton. */
+const LINK_ROLES = ['link', 'menuitem', 'menuitemradio', 'menuitemcheckbox', 'treeitem'];
+const BUTTON_ROLES = ['button', 'submit', 'reset'];
+
+/** Balises formables natives (HTMLFormElement.elements n'existe pas sur les documents happy-dom : on s'appuie sur les balises). */
+export const FORM_FIELD_TAGS = new Set([
+  'INPUT',
+  'SELECT',
+  'TEXTAREA',
+  'BUTTON',
+  'OUTPUT',
+  'FIELDSET',
+]);
+
+/** Vrai si l'élément est un lien (<a href> ou role="link"…). */
+export function isLinkElement(el: Element): boolean {
+  if (el.tagName === 'A') return el.hasAttribute('href');
+  const role = el.getAttribute('role');
+  return role !== null && LINK_ROLES.includes(role.toLowerCase());
+}
+
+/** Vrai si l'élément est un bouton (<button> ou role="button"…). */
+export function isButtonElement(el: Element): boolean {
+  if (el.tagName === 'BUTTON') return true;
+  const role = el.getAttribute('role');
+  return role !== null && BUTTON_ROLES.includes(role.toLowerCase());
+}
+
+/** Champ de formulaire « étiquetable » : input (hors boutons cachés), select, textarea. */
+export function isFormFieldElement(el: Element): boolean {
+  const tag = el.tagName.toUpperCase();
+  if (tag === 'SELECT' || tag === 'TEXTAREA') return true;
+  if (tag !== 'INPUT') return false;
+  const type = (el.getAttribute('type') ?? 'text').toLowerCase();
+  // Types non étiquetables au sens WCAG 1.3.1/3.3.2 (boutons natifs, conteneurs).
+  return !['button', 'submit', 'reset', 'image', 'hidden'].includes(type);
+}
+
+/**
+ * Résout le <label> associé nativement à un champ (WCAG « label ») :
+ *  1. `<label for="id">` pointant vers le champ ;
+ *  2. `<label>` ancêtre enveloppant le champ.
+ * Retourne null si aucune association native n'existe (aria-label ne compte pas ici).
+ */
+export function findAssociatedLabel(field: Element): Element | null {
+  const doc = field.ownerDocument;
+  const id = field.getAttribute('id');
+  if (doc && id && id.trim() !== '') {
+    const byFor = doc.querySelector(`label[for="${escapeCssValue(id.trim())}"]`);
+    if (byFor) return byFor;
+  }
+  let ancestor: Element | null = field.parentElement;
+  while (ancestor) {
+    if (ancestor.tagName === 'LABEL') return ancestor;
+    ancestor = ancestor.parentElement;
+  }
+  return null;
+}
+
 /** Échappe un valeur pour un sélecteur CSS de type [attr="v"] (guillemets + backslashes). */
 export function escapeCssValue(value: string): string {
   return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
@@ -95,7 +154,11 @@ export function hasNonEmptyAttr(el: Element, name: string): boolean {
   return value !== null && value.trim() !== '';
 }
 
-/** Nom accessible calculé à la volée (WCAG accName, simplifié) pour boutons/liens/champs. */
+/**
+ * Nom accessible calculé à la volée (algorithme WCAG accName, simplifié).
+ * Ordre de priorité : aria-label → aria-labelledby → <label> associé natif →
+ * title → contenu textuel (images : alt en dernier recours si l'UI le demande).
+ */
 export function accessibleName(el: Element): string {
   const ariaLabel = el.getAttribute('aria-label');
   if (ariaLabel && ariaLabel.trim() !== '') return ariaLabel.trim();
@@ -114,8 +177,41 @@ export function accessibleName(el: Element): string {
     }
   }
 
+  // Association native <label for>/englobant — pertinent pour les champs.
+  const label = findAssociatedLabel(el);
+  if (label) {
+    const labelText = (label.textContent ?? '').replace(/\s+/g, ' ').trim();
+    if (labelText !== '') return labelText;
+  }
+
   const title = el.getAttribute('title');
   if (title && title.trim() !== '') return title.trim();
 
   return (el.textContent ?? '').replace(/\s+/g, ' ').trim();
+}
+
+/** Vrai si l'élément est nativement focusable au clavier (hors tabindex). */
+export function isNativelyFocusable(el: Element): boolean {
+  const tag = el.tagName.toUpperCase();
+  if (tag === 'A') return el.hasAttribute('href');
+  if (tag === 'BUTTON' || tag === 'SELECT' || tag === 'TEXTAREA') return true;
+  if (tag === 'INPUT') {
+    const type = (el.getAttribute('type') ?? 'text').toLowerCase();
+    return type !== 'hidden';
+  }
+  if (tag === 'IFRAME' || tag === 'SUMMARY') return true;
+  return el.hasAttribute('contenteditable') && el.getAttribute('contenteditable') !== 'false';
+}
+
+/** Vrai si l'élément est focusable au clavier (natif ou via tabindex ≥ 0). */
+export function isFocusable(el: Element): boolean {
+  if (isNativelyFocusable(el)) {
+    // Un tabindex négatif reste focusable programmatiquement ; on le compte
+    // comme focusable pour aria-hidden (il reste atteignable par JS/script).
+    return true;
+  }
+  const tabindex = el.getAttribute('tabindex');
+  if (tabindex === null) return false;
+  const value = Number.parseInt(tabindex, 10);
+  return !Number.isNaN(value) && value >= 0;
 }

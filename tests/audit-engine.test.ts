@@ -127,9 +127,10 @@ const DEMO_RULES: AuditRule[] = [imgNoAltRule, emptyLinkRule, alwaysPassRule];
 /* ------------------------------------------------------------------ */
 
 describe('runAudit — exécution et consolidation', () => {
-  it('retourne une sortie vide exploitable quand le registre est vide', () => {
+  it('retourne une sortie vide exploitable quand aucune règle n’est injectée', () => {
     const doc = makeDoc('<body><p>ok</p></body>');
-    const output = runAudit(doc, 'https://example.com');
+    // registre officiel non vide depuis l'Étape 6 : on force la liste à []
+    const output = runAudit(doc, 'https://example.com', undefined, []);
     expect(output.issues).toEqual([]);
     expect(output.traces).toEqual([]);
     expect(output.errors).toEqual([]);
