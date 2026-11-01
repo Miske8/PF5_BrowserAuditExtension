@@ -26,6 +26,8 @@ vi.mock('../src/services/preferences', async (importOriginal) => {
 });
 
 import { initPopup, bindElements, renderState, toUiState } from '../src/popup/main';
+import { countCriticalMajor } from '../src/popup/main';
+import { documentationUrl } from '../src/popup/components/results-view';
 import type { A11yReport } from '../src/audit/report-builder';
 
 const POPUP_HTML = `
@@ -260,5 +262,79 @@ describe('toUiState + renderState', () => {
     const button = root.querySelector('#result-body button')!;
     button.dispatchEvent(new Event('click'));
     expect(onRun).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('finition Étape 16 — vue résultats', () => {
+  it('carte de score : barre de pénalité décorative avec segments par sévérité', () => {
+    const root = setupDom();
+    const dom = bindElements(root);
+    renderState(dom, { kind: 'done', report: fakeReport() }, { onRun: () => {} });
+    const bar = root.querySelector('.penalty-bar');
+    expect(bar).not.toBeNull();
+    expect(bar?.getAttribute('aria-hidden')).toBe('true');
+    // pénalités présentes : critique + modéré → 2 segments, pas de segment « clean »
+    expect(root.querySelectorAll('.penalty-bar__seg')).toHaveLength(2);
+    expect(root.querySelector('.penalty-bar__seg--critical')).not.toBeNull();
+    expect(root.querySelector('.penalty-bar__seg--moderate')).not.toBeNull();
+  });
+
+  it('page propre : la barre de pénalité affiche le segment « clean »', () => {
+    const root = setupDom();
+    const dom = bindElements(root);
+    const base = fakeReport();
+    const clean = fakeReport({
+      issues: [],
+      score: {
+        ...base.score,
+        score: 100,
+        level: 'excellent',
+        penalty: 0,
+        penaltiesBySeverity: { critical: 0, major: 0, moderate: 0, minor: 0 },
+      },
+    });
+    renderState(dom, { kind: 'done', report: clean }, { onRun: () => {} });
+    expect(root.querySelector('.penalty-bar__seg--clean')).not.toBeNull();
+  });
+
+  it('carte de problème : chevron décoratif et actions (copie + documentation)', () => {
+    const root = setupDom();
+    const dom = bindElements(root);
+    renderState(dom, { kind: 'done', report: fakeReport() }, { onRun: () => {} });
+    const card = root.querySelector('.issue--critical');
+    expect(card).not.toBeNull();
+    const chevron = card?.querySelector('.issue__chevron');
+    expect(chevron?.getAttribute('aria-hidden')).toBe('true');
+    const docLink = card?.querySelector<HTMLAnchorElement>('.issue__doc-link');
+    expect(docLink?.href).toContain('w3.org/WAI/WCAG22/Understanding/non-text-content');
+    expect(card?.textContent).toContain('Recommandation :');
+  });
+
+  it('barre d’exports : trois boutons (JSON, CSV, Markdown)', () => {
+    const root = setupDom();
+    const dom = bindElements(root);
+    renderState(dom, { kind: 'done', report: fakeReport() }, { onRun: () => {} });
+    const labels = [...root.querySelectorAll('.exports .btn')].map((b) => b.textContent);
+    expect(labels).toEqual(['Exporter JSON', 'Exporter CSV', 'Exporter Markdown']);
+  });
+
+  it('le premier problème critique est dépliable d’office après rendu', () => {
+    const root = setupDom();
+    const dom = bindElements(root);
+    renderState(dom, { kind: 'done', report: fakeReport() }, { onRun: () => {} });
+    expect(root.querySelector<HTMLDetailsElement>('.issue--critical')?.open).toBe(true);
+  });
+
+  it('countCriticalMajor somme critiques et majeurs du résumé', () => {
+    expect(countCriticalMajor(fakeReport())).toBe(2); // 2 critiques, 0 majeurs
+  });
+
+  it('documentationUrl : aide W3C dérivée du critère WCAG, sinon null', () => {
+    const base = fakeReport().issues[0]!;
+    expect(documentationUrl(base)).toContain('non-text-content');
+    expect(documentationUrl({ ...base, wcag: undefined })).toBeNull();
+    expect(documentationUrl({ ...base, helpUrl: 'https://aide.example' })).toBe(
+      'https://aide.example',
+    );
   });
 });

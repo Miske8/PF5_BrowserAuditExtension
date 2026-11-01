@@ -209,8 +209,7 @@ async function copyIssueDetails(issue: AuditIssue): Promise<void> {
 /** URL de documentation d'une issue (Étape 16) : helpUrl sinon critère WCAG W3C. */
 export function documentationUrl(issue: AuditIssue): string | null {
   if (issue.helpUrl) return issue.helpUrl;
-  const match = /WCAG\s+(\d+(?:\.\d+)?)/i.exec(issue.wcag ?? '');
-  const criterion = match?.[1];
+  const criterion = wcagCriterion(issue.wcag);
   if (!criterion) return null;
   return `https://www.w3.org/WAI/WCAG22/Understanding/${wcagSlug(criterion)}/`;
 }
@@ -231,6 +230,16 @@ const WCAG_SLUGS: Record<string, string> = {
 
 function wcagSlug(criterion: string): string {
   return WCAG_SLUGS[criterion] ?? `criteria-${criterion.replace(/\./g, '-')}`;
+}
+
+/**
+ * Extrait le numéro complet d'un critère WCAG (« WCAG 1.1.1 (A) » → « 1.1.1 »).
+ * L'ancre de niveau ((A)/AA/AAA) est écartée pour ne pas être confondue avec
+ * une version du référentiel.
+ */
+function wcagCriterion(wcag: string | undefined): string | null {
+  const match = /WCAG\s+(\d+\.\d+\.\d+)/i.exec(wcag ?? '');
+  return match?.[1] ?? null;
 }
 
 /** Assemblage complet de la vue « résultats ». */
