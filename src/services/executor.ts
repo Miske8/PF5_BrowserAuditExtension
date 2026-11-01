@@ -23,6 +23,7 @@ import { buildReport, isA11yReport, type A11yReport } from '../audit/report-buil
 import type { AuditFailureCode, AuditRunResult } from '../audit/types';
 import type { AuditOptions } from '../types';
 import { readJson, writeJson } from './storage';
+import { emitAuditStarted } from './audit-events';
 
 /** URL que l'extension peut analyser avec `activeTab` seules (pas de host_permissions). */
 const ANALYZABLE_URL = /^https?:\/\//i;
@@ -197,6 +198,8 @@ export async function runAuditOnActiveTab(
     }
     // Persistance best-effort : un échec de stockage ne doit pas casser l'UI.
     void writeJson(LAST_REPORT_KEY, raw);
+    // Signalement aux autres contextes ouverts (Étape 16 — badge + événement).
+    void emitAuditStarted();
     return { ok: true, report: raw };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
