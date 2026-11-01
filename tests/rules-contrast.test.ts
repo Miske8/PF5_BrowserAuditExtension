@@ -190,7 +190,7 @@ describe('color-contrast : détections', () => {
     });
     expect(issues).toHaveLength(1);
     expect(issues[0]!.severity).toBe('major');
-    expect(issues[0]!.elements[0].detail).toContain('gros texte');
+    expect(issues[0]!.elements[0]!.detail).toContain('gros texte');
   });
 
   it('fond porté par un ancêtre opaque (chaîne de parents)', () => {
@@ -200,8 +200,8 @@ describe('color-contrast : détections', () => {
       '.dark': { backgroundColor: '#222222' },
     });
     expect(issues).toHaveLength(1);
-    expect(issues[0]!.elements[0].detail).toContain('sur fond #222222');
-    expect(issues[0]!.elements[0].confidence).toBe(1);
+    expect(issues[0]!.elements[0]!.detail).toContain('sur fond #222222');
+    expect(issues[0]!.elements[0]!.confidence).toBe(1);
   });
 
   it('transparence composée : rgba empilé puis blanc supposé → confiance réduite', () => {
@@ -237,9 +237,9 @@ describe('color-contrast : détections', () => {
       { contrastLevel: 'AAA' },
     );
     expect(aaaIssues).toHaveLength(1);
-    expect(aaaIssues[0].severity).toBe('minor');
-    expect(aaaIssues[0].wcag).toBe('WCAG 1.4.6 (AAA)');
-    expect(aaaIssues[0].elements[0].detail).toContain('< 7:1');
+    expect(aaaIssues[0]!.severity).toBe('minor');
+    expect(aaaIssues[0]!.wcag).toBe('WCAG 1.4.6 (AAA)');
+    expect(aaaIssues[0]!.elements[0]!.detail).toContain('< 7:1');
   });
 
   it('plusieurs éléments échouants groupés dans une seule issue par sévérité', () => {
@@ -262,7 +262,7 @@ describe('color-contrast : détections', () => {
     });
     expect(issues.length).toBeGreaterThanOrEqual(0); // selon mélange exact
     if (issues.length > 0) {
-      expect(issues[0]!.elements[0].confidence).toBeLessThanOrEqual(0.85);
+      expect(issues[0]!.elements[0]!.confidence).toBeLessThanOrEqual(0.85);
     }
   });
 });

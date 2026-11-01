@@ -11,6 +11,7 @@
 
 import type { AuditIssue, PageMeta } from '../types';
 import type { AuditRule } from '../rules/rule';
+import type { A11yReport } from './report-builder';
 
 /** Statut d'exécution d'une règle dans un run donné. */
 export type RuleRunStatus = 'pass' | 'fail' | 'skipped' | 'error';
@@ -53,7 +54,7 @@ export interface RawAuditOutput {
 /** Résultat d'un audit au niveau service/popup (Étapes 5 & 9). */
 export type AuditRunResult =
   /** Succès : rapport complet prêt à être affiché/exporté (Étape 8). */
-  | { ok: true; report: import('./report-builder').A11yReport }
+  | { ok: true; report: A11yReport }
   | { ok: false; code: AuditFailureCode; message: string };
 
 /** Codes d'échec d'un audit — gérés dans l'UI (Étape 12). */

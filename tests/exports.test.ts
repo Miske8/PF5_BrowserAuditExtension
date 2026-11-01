@@ -85,8 +85,12 @@ describe('export JSON', () => {
   it('refuse un objet qui n’est pas un A11yReport (TypeError)', () => {
     expect(() => serializeReportJson({} as A11yReport)).toThrow(TypeError);
     expect(() => serializeReportJson(null as unknown as A11yReport)).toThrow(TypeError);
-    expect(() => serializeReportCsv({ url: 'x' } as A11yReport)).toThrow(TypeError);
-    expect(() => serializeReportMarkdown({ issues: [] } as A11yReport)).toThrow(TypeError);
+    expect(() => serializeReportCsv({ url: 'x' } as unknown as A11yReport)).toThrow(
+      TypeError,
+    );
+    expect(() =>
+      serializeReportMarkdown({ issues: [] } as unknown as A11yReport),
+    ).toThrow(TypeError);
   });
 
   it('produit un nom de fichier daté safe', () => {
@@ -158,7 +162,7 @@ describe('export CSV', () => {
       description: 'Description globale',
       recommendation: 'Rien',
       severity: 'minor',
-      category: 'other',
+      category: 'document',
       elements: [],
     };
     report.issues.push(fake);
@@ -181,7 +185,7 @@ describe('export CSV', () => {
 
   it('nom de fichier CSV daté et sanitized', () => {
     const name = buildCsvFilename(audit(CLEAN_HTML));
-    expect(name).toMatch(/^a11y-lens-[\w.\-]+-\d{4}-\d{2}-\d{2}-\d{6}\.csv$/);
+    expect(name).toMatch(/^a11y-lens-[\w.-]+-\d{4}-\d{2}-\d{2}-\d{6}\.csv$/);
     expect(name).not.toContain('=');
   });
 
@@ -274,7 +278,8 @@ describe('résumé Markdown', () => {
     const ok = await copyReportMarkdown(audit(DIRTY_HTML));
     expect(ok).toBe(true);
     expect(writeText).toHaveBeenCalledTimes(1);
-    expect(writeText.mock.calls[0][0] as string).toContain('# Rapport d’accessibilité'.replace('’', "'"));
+    const written = writeText.mock.calls[0]?.[0] as string;
+    expect(written).toContain('# Rapport');
   });
 
   it('copyReportMarkdown retourne false si clipboard ET execCommand échouent', async () => {

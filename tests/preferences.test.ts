@@ -57,7 +57,9 @@ describe('sanitizePreferences — données corrompues ou absentes', () => {
   it('migre l’ancien booléen developerMode vers sensitivity=developer', () => {
     expect(sanitizePreferences({ developerMode: true }).sensitivity).toBe('developer');
     expect(sanitizePreferences({ developerMode: false }).sensitivity).toBe('standard');
-    expect(sanitizePreferences({ sensitivity: 'developer' }).sensitivity).toBe('developer');
+    expect(sanitizePreferences({ sensitivity: 'developer' }).sensitivity).toBe(
+      'developer',
+    );
     expect(sanitizePreferences({ sensitivity: 'nimporte' }).sensitivity).toBe('standard');
   });
 });

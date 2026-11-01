@@ -37,7 +37,10 @@ export function resolveOptions(options?: RunAuditOptions): AuditOptions {
   };
   // Option additionnelle (Étape 13) : seuil de confiance contraste, borné 0–1.
   if (typeof options?.minContrastConfidence === 'number') {
-    resolved.minContrastConfidence = Math.min(1, Math.max(0, options.minContrastConfidence));
+    resolved.minContrastConfidence = Math.min(
+      1,
+      Math.max(0, options.minContrastConfidence),
+    );
   }
   return resolved;
 }

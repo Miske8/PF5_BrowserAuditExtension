@@ -128,8 +128,7 @@ async function injectAudit(
   );
 
   const frame = results[0] as
-    | { result?: unknown; error?: { message?: string } }
-    | undefined;
+    { result?: unknown; error?: { message?: string } } | undefined;
   if (!frame) throw new Error('Aucun résultat d’injection.');
   if (frame.error) {
     // Chrome 111+ : InjectionResult peut porter une `error` (portable) — on garde le message.

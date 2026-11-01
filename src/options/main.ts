@@ -119,7 +119,9 @@ export async function initOptions(root: HTMLElement): Promise<void> {
   devCheckbox.checked = prefs.sensitivity === 'developer';
   const labelDev = el('label', { class: 'option' }, [
     devCheckbox,
-    text(' Mode développeur — afficher aussi les diagnostics de contraste à faible confiance'),
+    text(
+      ' Mode développeur — afficher aussi les diagnostics de contraste à faible confiance',
+    ),
   ]);
   devFieldset.append(labelDev);
 
@@ -172,7 +174,15 @@ export async function initOptions(root: HTMLElement): Promise<void> {
   });
 
   const actions = el('div', { class: 'actions' }, [saveButton, resetButton]);
-  root.append(heading, intro, rulesFieldset, contrastFieldset, devFieldset, actions, status);
+  root.append(
+    heading,
+    intro,
+    rulesFieldset,
+    contrastFieldset,
+    devFieldset,
+    actions,
+    status,
+  );
 }
 
 // Démarrage automatique quand le module est chargé comme entrée de page.
