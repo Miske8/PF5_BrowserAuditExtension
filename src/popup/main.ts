@@ -12,6 +12,7 @@
  */
 
 import { loadLastReport, runAuditOnActiveTab } from '../services/executor';
+import { highlightIssueElements, highlightMessageFr } from '../services/highlight';
 import { subscribeToAuditEvents } from '../services/audit-events';
 import {
   loadPreferences,
@@ -20,6 +21,7 @@ import {
 } from '../services/preferences';
 import type { AuditRunResult } from '../audit/types';
 import type { A11yReport } from '../audit/report-builder';
+import type { AuditIssue } from '../types';
 import { emptyState, errorState, loadingState } from './components/state-views';
 import { renderResults } from './components/results-view';
 import { el, text, truncate } from '../utils/ui';
@@ -89,7 +91,7 @@ function announce(container: HTMLElement, message: string): void {
 export function renderState(
   dom: PopupElements,
   state: UiState,
-  actions: { onRun: () => void },
+  actions: { onRun: () => void; onHighlight?: (issue: AuditIssue) => void },
 ): void {
   dom.resultRegion.setAttribute('aria-busy', String(state.kind === 'loading'));
   dom.runButton.disabled = state.kind === 'loading';
@@ -101,7 +103,9 @@ export function renderState(
       announce(dom.resultRegion, 'Analyse en cours.');
       return;
     case 'done': {
-      dom.resultBody.replaceChildren(renderResults(state.report));
+      dom.resultBody.replaceChildren(
+        renderResults(state.report, actions.onHighlight ? { onHighlight: actions.onHighlight } : {}),
+      );
       announce(
         dom.resultRegion,
         `Audit terminé : score ${state.report.score.score} sur 100, ${state.report.summary.totalIssues} problème(s) détecté(s).`,
@@ -151,6 +155,23 @@ export function toUiState(result: AuditRunResult): UiState {
   return { kind: 'error', code: result.code, message: result.message };
 }
 
+/**
+ * Surligne les éléments d'une issue dans la page et annonce le résultat aux
+ * lecteurs d'écran (fonctionnalité highlight). L'UI ne connaît que ce
+ * wrapper : toute la logique chrome.scripting reste dans le service.
+ */
+export async function highlightAndAnnounce(
+  dom: PopupElements,
+  issue: AuditIssue,
+): Promise<void> {
+  const outcome = await highlightIssueElements(issue);
+  if (outcome.ok) {
+    announce(dom.resultRegion, highlightMessageFr(outcome.result));
+  } else {
+    announce(dom.resultRegion, outcome.message);
+  }
+}
+
 /** Boucle principale de la popup. Retourne l'API interne (testable). */
 export function initPopup(root: ParentNode = document): {
   run: () => Promise<void>;
@@ -161,7 +182,10 @@ export function initPopup(root: ParentNode = document): {
 
   const setState = (next: UiState): void => {
     current = next;
-    renderState(dom, next, { onRun: () => void run() });
+    renderState(dom, next, {
+      onRun: () => void run(),
+      onHighlight: (issue) => void highlightAndAnnounce(dom, issue),
+    });
     if (next.kind === 'done') updatePageInfo(dom, next.report);
     // Badge d'action : indique si des problèmes critiques/majeurs subsistent.
     const criticalMajor = next.kind === 'done' ? countCriticalMajor(next.report) : 0;

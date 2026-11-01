@@ -81,6 +81,10 @@ function sanitizeElementFinding(
   if (typeof el.confidence === 'number' && Number.isFinite(el.confidence)) {
     out.confidence = Math.min(1, Math.max(0, el.confidence));
   }
+  // frameId : conservé s'il est entier (0 = principal, -1 = cross-origin inconnu).
+  if (typeof el.frameId === 'number' && Number.isInteger(el.frameId)) {
+    out.frameId = el.frameId;
+  }
   return out;
 }
 

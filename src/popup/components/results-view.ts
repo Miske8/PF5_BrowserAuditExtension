@@ -16,6 +16,21 @@ import { el, text, formatDateTimeFr, formatDuration } from '../../utils/ui';
 
 const SEVERITIES: Severity[] = ['critical', 'major', 'moderate', 'minor'];
 
+/** Callbacks d'interaction fournis par la popup (fonctionnalité highlight). */
+export interface ResultsActions {
+  /** Surligne les éléments de l'issue dans la page active. */
+  onHighlight?: (issue: AuditIssue) => void;
+}
+
+/** Vrai si l'issue peut être surlignée (au moins un finding avec sélecteur).
+ * Rétrocompatible : utilise le drapeau du rapport s'il existe, sinon calcule. */
+export function isHighlightable(issue: AuditIssue): boolean {
+  if (typeof issue.highlightable === 'boolean') return issue.highlightable;
+  return issue.elements.some(
+    (finding) => typeof finding.selector === 'string' && finding.selector !== '',
+  );
+}
+
 /** Carte de score : chiffre + niveau + métadonnées techniques discrètes. */
 export function renderScoreCard(report: A11yReport): HTMLElement {
   const card = el('section', { class: `score score--${report.score.level}` }, [
