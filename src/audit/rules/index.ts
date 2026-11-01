@@ -16,4 +16,4 @@ export { tabindexPositiveRule } from './tabindex-positive';
 export { ariaHiddenFocusableRule } from './aria-hidden-focusable';
 export { duplicateIdRule } from './duplicate-id';
 export { landmarksRule } from './landmarks';
-// Étape 7 : export { colorContrastRule } from './color-contrast';
+export { colorContrastRule } from './color-contrast';

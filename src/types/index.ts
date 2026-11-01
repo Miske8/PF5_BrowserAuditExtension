@@ -58,6 +58,13 @@ export interface ElementFinding {
   snippet?: string;
   /** Message propre à cet élément (ex: "alt manquant", "contraste 2.1:1 < 4.5:1"). */
   detail?: string;
+  /**
+   * Niveau de confiance du diagnostic, entre 0 et 1 (défaut : 1 = certain).
+   * Utilisé par la règle de contraste (Étape 7) : le fond est reconstruit
+   * approximativement (parents opaques + aplatissement sur blanc), donc un
+   * échec signalé avec confiance faible doit être affiché comme « à vérifier ».
+   */
+  confidence?: number;
 }
 
 /** Un problème détecté par une règle : ce que consomme directement l'UI. */

@@ -55,9 +55,25 @@ function sanitizeRawIssue(value: unknown): RawIssue | null {
   if (isSeverity(raw.severity)) out.severity = raw.severity as Severity;
   if (typeof raw.category === 'string') out.category = raw.category as RuleCategory;
   if (Array.isArray(raw.elements)) {
-    out.elements = raw.elements.filter(
-      (el): el is AuditIssue['elements'][number] => el !== null && typeof el === 'object',
-    );
+    out.elements = raw.elements
+      .filter((el): el is AuditIssue['elements'][number] => el !== null && typeof el === 'object')
+      .map(sanitizeElementFinding);
+  }
+  return out;
+}
+
+/** Sanitise un ElementFinding : ne conserve que des champs plats valides. */
+function sanitizeElementFinding(
+  value: AuditIssue['elements'][number],
+): AuditIssue['elements'][number] {
+  const el = value as Record<string, unknown>;
+  const out: AuditIssue['elements'][number] = {};
+  if (typeof el.selector === 'string') out.selector = el.selector;
+  if (typeof el.tag === 'string') out.tag = el.tag;
+  if (typeof el.snippet === 'string') out.snippet = el.snippet;
+  if (typeof el.detail === 'string') out.detail = el.detail;
+  if (typeof el.confidence === 'number' && Number.isFinite(el.confidence)) {
+    out.confidence = Math.min(1, Math.max(0, el.confidence));
   }
   return out;
 }

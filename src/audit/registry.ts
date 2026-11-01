@@ -20,7 +20,7 @@ import { tabindexPositiveRule } from './rules/tabindex-positive';
 import { ariaHiddenFocusableRule } from './rules/aria-hidden-focusable';
 import { duplicateIdRule } from './rules/duplicate-id';
 import { landmarksRule } from './rules/landmarks';
-// Étape 7 : import { colorContrastRule } from './rules/color-contrast';
+import { colorContrastRule } from './rules/color-contrast';
 
 /**
  * Liste des règles actives. L'ordre de ce tableau est aussi l'ordre de passage
@@ -40,7 +40,8 @@ const RULES: AuditRule[] = [
   ariaHiddenFocusableRule,
   duplicateIdRule,
   landmarksRule,
-  // Étape 7 : règle de contraste (colorContrastRule)
+  // Étape 7 : règle de contraste (estimation fond + confiance)
+  colorContrastRule,
 ];
 
 /** Retourne une copie défensive pour éviter toute mutation externe du registre. */
