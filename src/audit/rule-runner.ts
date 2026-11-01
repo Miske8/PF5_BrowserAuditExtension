@@ -54,6 +54,9 @@ function sanitizeRawIssue(value: unknown): RawIssue | null {
   if (typeof raw.helpUrl === 'string') out.helpUrl = raw.helpUrl;
   if (isSeverity(raw.severity)) out.severity = raw.severity as Severity;
   if (typeof raw.category === 'string') out.category = raw.category as RuleCategory;
+  if (typeof raw.occurrences === 'number' && Number.isFinite(raw.occurrences)) {
+    out.occurrences = Math.max(0, Math.floor(raw.occurrences));
+  }
   if (Array.isArray(raw.elements)) {
     out.elements = raw.elements
       .filter((el): el is AuditIssue['elements'][number] => el !== null && typeof el === 'object')

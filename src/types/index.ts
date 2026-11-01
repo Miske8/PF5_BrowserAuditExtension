@@ -73,6 +73,13 @@ export interface AuditIssue {
   ruleId: RuleId | string;
   /** Id unique de l'occurrence : `${ruleId}:${index}` si la règle ne le fournit pas. */
   id: string;
+  /**
+   * Nombre d'éléments/occurrences agrégés sous cette issue (défaut : 1).
+   * Les règles groupent souvent plusieurs constats en une seule issue
+   * (ex: « 7 images sans alt ») : le score pondère chaque occurrence,
+   * pas seulement l'issue affichée (Étape 8).
+   */
+  occurrences?: number;
   /** Libellé court affiché en en-tête de carte (défaut : title de la règle). */
   title: string;
   /** Explication du problème et de son impact utilisateur. */
