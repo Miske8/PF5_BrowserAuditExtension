@@ -91,6 +91,36 @@ export interface A11yReport {
   cleanPage: boolean;
 }
 
+/**
+ * Enrichissement Étape 16 : marque les issues dont un même élément est aussi
+ * signalé par une autre règle du moteur (ex: `<input type="image">` sans alt
+ * relevé à la fois par `image-alt` et `button-name`). Une seule correction
+ * résout alors plusieurs constats — l'UI peut le signaler.
+ * La détection est sûre pour MV3 : comparaison de paires `[ruleId, selector]`,
+ * uniquement sur les findings dotés d'un sélecteur.
+ */
+export function markOverlappingIssues(issues: readonly AuditIssue[]): AuditIssue[] {
+  const seen = new Map<string, string>(); // clé `${selector}\u0000${ruleId}` → id d'issue
+  const overlapping = new Set<string>(); // ids des issues en recoupement
+  for (const issue of issues) {
+    for (const finding of issue.elements) {
+      if (!finding.selector) continue;
+      const key = `${finding.selector}\u0000${issue.ruleId}`;
+      const previous = seen.get(key);
+      if (previous !== undefined && previous !== issue.id) {
+        overlapping.add(previous);
+        overlapping.add(issue.id);
+      } else if (previous === undefined) {
+        seen.set(key, issue.id);
+      }
+    }
+  }
+  if (overlapping.size === 0) return [...issues];
+  return issues.map((issue) =>
+    overlapping.has(issue.id) ? { ...issue, overlapsOtherRule: true } : issue,
+  );
+}
+
 /** Construit le résumé par sévérité (issues + occurrences). */
 export function summarizeBySeverity(issues: readonly AuditIssue[]): SeveritySummary {
   const empty = (): SeverityCounts => ({ critical: 0, major: 0, moderate: 0, minor: 0 });
@@ -175,6 +205,7 @@ export function buildReport(
   const aggregates: AuditAggregates = buildAggregates(output);
   const score = computeScore(output.issues);
   const rulesExecuted = toExecutedRules(output);
+  const issues = markOverlappingIssues(output.issues);
 
   return {
     meta: {
@@ -188,10 +219,10 @@ export function buildReport(
     generatedAt: output.ranAt,
     durationMs: output.durationMs,
     score,
-    summary: summarizeBySeverity(output.issues),
+    summary: summarizeBySeverity(issues),
     rulesStats: countRuleStatuses(rulesExecuted),
     rulesExecuted,
-    issues: output.issues,
+    issues,
     page: output.page,
     errors: output.errors,
     cleanPage: aggregates.cleanPage,

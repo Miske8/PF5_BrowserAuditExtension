@@ -94,6 +94,14 @@ export interface AuditIssue {
   wcag?: string;
   /** Lien d'aide externe (optionnel, jamais requis). */
   helpUrl?: string;
+  /**
+   * true si le même élément est aussi signalé par une autre règle du moteur
+   * (Étape 16 — enrichissement rapport, ex: un bouton sans nom = button-name
+   * + label). Signale à l'UI qu'une correction unique peut résoudre plusieurs
+   * constats. Optionnel : absent des rapports persistés par les versions
+   * antérieures (rétrocompatible).
+   */
+  overlapsOtherRule?: boolean;
   /** Éléments concernés (peut être vide pour une absence globale, ex: <html lang>). */
   elements: ElementFinding[];
 }

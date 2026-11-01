@@ -12,6 +12,7 @@
  */
 
 import { loadLastReport, runAuditOnActiveTab } from '../services/executor';
+import { subscribeToAuditEvents } from '../services/audit-events';
 import {
   loadPreferences,
   minContrastConfidence,
@@ -35,6 +36,14 @@ export interface PopupElements {
   pageInfo: HTMLParagraphElement;
   resultRegion: HTMLElement;
   resultBody: HTMLElement;
+}
+
+/** Raccourcis clavier globaux de la popup (Étape 16). */
+const SHORTCUT_MODIFIER = /Mac|iPhone|iPad/.test(navigator.platform ?? '') ? '⌘' : 'Ctrl';
+
+/** Met à jour le badge du bouton « Analyser » avec le raccourci. */
+export function updateRunButtonLabel(button: HTMLButtonElement, busy: boolean): void {
+  button.textContent = busy ? 'Analyse en cours…' : `Analyser la page (${SHORTCUT_MODIFIER}+Enter)`;
 }
 
 /** Récupère les éléments statiques de la popup (lève si DOM inattendu). */
@@ -76,6 +85,7 @@ export function renderState(
 ): void {
   dom.resultRegion.setAttribute('aria-busy', String(state.kind === 'loading'));
   dom.runButton.disabled = state.kind === 'loading';
+  updateRunButtonLabel(dom.runButton, state.kind === 'loading');
 
   switch (state.kind) {
     case 'loading':
@@ -88,6 +98,12 @@ export function renderState(
         dom.resultRegion,
         `Audit terminé : score ${state.report.score.score} sur 100, ${state.report.summary.totalIssues} problème(s) détecté(s).`,
       );
+      // Hiérarchie visuelle (Étape 16) : le premier problème critique est
+      // dépliable d'emblée pour guider l'attention sans surcharger la vue.
+      const firstCritical = dom.resultBody.querySelector<HTMLDetailsElement>(
+        '.issue--critical',
+      );
+      if (firstCritical) firstCritical.open = true;
       return;
     }
     case 'error':
@@ -117,6 +133,11 @@ export function updatePageInfo(dom: PopupElements, report: A11yReport): void {
   );
 }
 
+/** Nombre de problèmes critiques ou majeurs d'un rapport (badge d'action). */
+export function countCriticalMajor(report: A11yReport): number {
+  return report.summary.issues.critical + report.summary.issues.major;
+}
+
 /** Traduit un résultat du service en état UI. */
 export function toUiState(result: AuditRunResult): UiState {
   if (result.ok) return { kind: 'done', report: result.report };
@@ -135,6 +156,13 @@ export function initPopup(root: ParentNode = document): {
     current = next;
     renderState(dom, next, { onRun: () => void run() });
     if (next.kind === 'done') updatePageInfo(dom, next.report);
+    // Badge d'action : indique si des problèmes critiques/majeurs subsistent.
+    const criticalMajor = next.kind === 'done' ? countCriticalMajor(next.report) : 0;
+    dom.runButton.classList.toggle('btn--alert', criticalMajor > 0);
+    dom.runButton.title =
+      criticalMajor > 0
+        ? `${criticalMajor} problème(s) critique(s) ou majeur(s) à corriger`
+        : `Lancer un nouvel audit (${SHORTCUT_MODIFIER}+Entrée)`;
   };
 
   async function run(): Promise<void> {
@@ -157,6 +185,37 @@ export function initPopup(root: ParentNode = document): {
     } catch {
       /* contexte sans chrome (tests) : ignoré */
     }
+  });
+
+  // Raccourcis clavier globaux (Étape 16) :
+  //   Ctrl/⌘+Entrée → relancer l'audit ; ? → aide raccourcis ; Esc → focus résultat.
+  document.addEventListener('keydown', (event: KeyboardEvent) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+      event.preventDefault();
+      void run();
+      return;
+    }
+    if (event.key === '?' && !(event.target instanceof HTMLInputElement)) {
+      event.preventDefault();
+      announce(
+        dom.resultRegion,
+        `Raccourcis : ${SHORTCUT_MODIFIER}+Entrée pour analyser, barre d'espace pour activer un bouton, Entrée sur une carte pour la déplier.`,
+      );
+      return;
+    }
+    if (event.key === 'Escape') {
+      dom.resultRegion.focus();
+    }
+  });
+
+  // Événements inter-contextes (Étape 16) : un audit lancé ailleurs rafraîchit
+  // la popup ouverte et annonce le nouveau rapport aux lecteurs d'écran.
+  subscribeToAuditEvents(() => {
+    void loadLastReport().then((report) => {
+      if (!report || current.kind === 'loading') return;
+      setState({ kind: 'done', report });
+      announce(dom.resultRegion, 'Nouvel audit terminé : rapport actualisé.');
+    });
   });
 
   // Restauration du dernier rapport connu (état initial utile, sinon vide).
