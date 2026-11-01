@@ -277,7 +277,9 @@ export const colorContrastRule = defineRule({
       const fg = parseColor(style.color);
       if (!fg) continue; // couleur non résolue (hsl exotique…) → on renonce
       const bg = resolveBackground(el, getStyle);
-      if (bg.confidence < MIN_CONFIDENCE) continue;
+      // Seuil pilotable par les préférences (Étape 13) : le mode développeur
+      // passe minContrastConfidence à 0 pour tout afficher.
+      if (bg.confidence < (ctx.options.minContrastConfidence ?? MIN_CONFIDENCE)) continue;
 
       const flatFg = blendOver(fg, bg.rgb);
       const sizePx = fontSizePx(style);

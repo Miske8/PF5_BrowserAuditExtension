@@ -29,12 +29,17 @@ export type RunAuditOptions = Partial<AuditOptions>;
 
 /** Complète des options partielles avec les valeurs par défaut (robuste au clone). */
 export function resolveOptions(options?: RunAuditOptions): AuditOptions {
-  return {
+  const resolved: AuditOptions = {
     contrastLevel: options?.contrastLevel ?? DEFAULT_AUDIT_OPTIONS.contrastLevel,
     disabledRules: Array.isArray(options?.disabledRules)
       ? [...options.disabledRules]
       : [],
   };
+  // Option additionnelle (Étape 13) : seuil de confiance contraste, borné 0–1.
+  if (typeof options?.minContrastConfidence === 'number') {
+    resolved.minContrastConfidence = Math.min(1, Math.max(0, options.minContrastConfidence));
+  }
+  return resolved;
 }
 
 /** Recueille les métadonnées de page (utilisées par le rapport et l'export). */

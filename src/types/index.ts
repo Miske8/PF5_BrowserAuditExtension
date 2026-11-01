@@ -124,6 +124,12 @@ export interface AuditOptions {
   contrastLevel: 'AA' | 'AAA';
   /** Règles désactivées par l'utilisateur (id de règle). */
   disabledRules: RuleId[];
+  /**
+   * Seuil de confiance minimal accepté par la règle de contraste (0–1).
+   * Standard : 0.5 (on abandonne les diagnostics trop incertains).
+   * Mode développeur : 0 (on affiche aussi les estimations douteuses).
+   */
+  minContrastConfidence?: number;
 }
 
 export const DEFAULT_AUDIT_OPTIONS: AuditOptions = {
